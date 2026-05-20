@@ -9,7 +9,9 @@ interface TopbarProps {
   lightMode: boolean;
   onToggleLight: () => void;
   onOpenHistory: () => void;
+  onOpenInfo: () => void;
 }
+
 
 export function Topbar({
   tuning,
