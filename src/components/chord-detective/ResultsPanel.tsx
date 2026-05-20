@@ -54,18 +54,19 @@ export function ResultsPanel({
       style={{ animation: "slide-up 0.5s var(--ease-out-expo) both" }}
     >
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-muted font-mono text-[10px] tracking-[0.2em] uppercase">
+        <p className="text-muted font-mono text-[10px] tracking-[0.2em] uppercase">
           {primary.confidence >= 80 ? "Primary Interpretation" : "Best Guess"}
-        </h2>
+        </p>
         <span className="px-2 py-1 rounded bg-primary/10 text-primary font-mono text-[10px]">
           {primary.confidence}% Match
         </span>
       </div>
 
       <div className="space-y-1 mb-8">
-        <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tighter break-all">
+        <h2 className="text-5xl sm:text-6xl font-extrabold tracking-tighter break-all">
           {primary.name}
-        </h1>
+        </h2>
+
         <p className="text-muted font-mono text-xs">
           {primary.fullName}
           {primary.isSlash && (

@@ -1,0 +1,9 @@
+# Chord Detective
+
+> Identify guitar chords by tapping notes on a virtual fretboard. Supports standard and alternate tunings, slash chords, and 7-string guitars.
+
+Chord Detective is a mobile-first web app for guitarists. Place fingers on a virtual fretboard, mark open or muted strings, and instantly get the chord name, intervals, notes, root, bass, and alternative interpretations with a confidence score.
+
+## Pages
+
+- [Home](/): Interactive fretboard, chord identification, history, favorites, and tuning settings.
