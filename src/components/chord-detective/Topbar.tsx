@@ -74,6 +74,12 @@ export function Topbar({
 
       <div className="flex items-center gap-3 sm:gap-5">
         <button
+          onClick={onOpenInfo}
+          className="text-[11px] sm:text-xs font-mono text-muted hover:text-foreground transition-colors uppercase tracking-widest"
+        >
+          Informations
+        </button>
+        <button
           onClick={onOpenHistory}
           className="text-[11px] sm:text-xs font-mono text-muted hover:text-foreground transition-colors uppercase tracking-widest"
         >
