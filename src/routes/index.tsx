@@ -229,6 +229,7 @@ function Index() {
         onLoad={onLoadEntry}
         onClearHistory={() => setHistory([])}
       />
+      <InfoSheet open={infoOpen} onClose={() => setInfoOpen(false)} />
     </div>
   );
 }
