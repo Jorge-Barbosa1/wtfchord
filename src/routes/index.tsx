@@ -4,6 +4,7 @@ import { Fretboard } from "@/components/chord-detective/Fretboard";
 import { ResultsPanel } from "@/components/chord-detective/ResultsPanel";
 import { Topbar } from "@/components/chord-detective/Topbar";
 import { HistorySheet } from "@/components/chord-detective/HistorySheet";
+import { InfoSheet } from "@/components/chord-detective/InfoSheet";
 import { TUNINGS, DEFAULT_TUNING, type Tuning } from "@/lib/music/tunings";
 import {
   detectChords,
