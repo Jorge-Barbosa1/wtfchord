@@ -35,6 +35,7 @@ function Index() {
   const [results, setResults] = useState<DetectionResult[]>([]);
   const [selectedName, setSelectedName] = useState<string | undefined>();
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   const [history, setHistory] = usePersistedState<HistoryEntry[]>("cd.history", []);
   const [favorites, setFavorites] = usePersistedState<HistoryEntry[]>("cd.favorites", []);
