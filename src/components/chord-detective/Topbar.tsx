@@ -21,6 +21,7 @@ export function Topbar({
   lightMode,
   onToggleLight,
   onOpenHistory,
+  onOpenInfo,
 }: TopbarProps) {
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState(false);
