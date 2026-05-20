@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://wtfchord.lovable.app/sitemap.xml
