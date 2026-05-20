@@ -9,7 +9,9 @@ interface TopbarProps {
   lightMode: boolean;
   onToggleLight: () => void;
   onOpenHistory: () => void;
+  onOpenInfo: () => void;
 }
+
 
 export function Topbar({
   tuning,
@@ -19,6 +21,7 @@ export function Topbar({
   lightMode,
   onToggleLight,
   onOpenHistory,
+  onOpenInfo,
 }: TopbarProps) {
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState(false);
@@ -70,6 +73,12 @@ export function Topbar({
       </div>
 
       <div className="flex items-center gap-3 sm:gap-5">
+        <button
+          onClick={onOpenInfo}
+          className="text-[11px] sm:text-xs font-mono text-muted hover:text-foreground transition-colors uppercase tracking-widest"
+        >
+          Informations
+        </button>
         <button
           onClick={onOpenHistory}
           className="text-[11px] sm:text-xs font-mono text-muted hover:text-foreground transition-colors uppercase tracking-widest"
