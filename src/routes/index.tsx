@@ -168,6 +168,7 @@ function Index() {
         lightMode={lightMode}
         onToggleLight={() => setLightMode((v) => !v)}
         onOpenHistory={() => setHistoryOpen(true)}
+        onOpenInfo={() => setInfoOpen(true)}
       />
 
       <main className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
