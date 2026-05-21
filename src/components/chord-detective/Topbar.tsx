@@ -39,7 +39,7 @@ export function Topbar({
     <nav className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-background/80 backdrop-blur-xl border-b border-border">
       <div className="flex items-center gap-3 sm:gap-4 min-w-0">
         <span className="font-extrabold tracking-tighter text-lg sm:text-xl italic shrink-0">
-          CHORD<span className="text-primary text-2xl">.</span>D
+          WTFChord
         </span>
         <div className="hidden sm:block h-4 w-px bg-border" />
         <div className="relative">

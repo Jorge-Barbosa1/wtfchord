@@ -19,18 +19,6 @@ export const TUNINGS: Tuning[] = [
     ],
   },
   {
-    id: "dadgad",
-    label: "DADGAD",
-    strings: [
-      { note: "D", octave: 2 },
-      { note: "A", octave: 2 },
-      { note: "D", octave: 3 },
-      { note: "G", octave: 3 },
-      { note: "A", octave: 3 },
-      { note: "D", octave: 4 },
-    ],
-  },
-  {
     id: "cavaquinho",
     label: "Cavaquinho (GGBD)",
     strings: [
