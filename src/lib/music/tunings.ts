@@ -69,9 +69,9 @@ export const TUNINGS: Tuning[] = [
   },
   {
     id: "cavaquinho",
-    label: "Cavaquinho (DGBD)",
+    label: "Cavaquinho (GGBD)",
     strings: [
-      { note: "D", octave: 4 },
+      { note: "G", octave: 4 },
       { note: "G", octave: 4 },
       { note: "B", octave: 4 },
       { note: "D", octave: 5 },
