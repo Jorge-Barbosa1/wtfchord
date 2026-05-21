@@ -67,6 +67,36 @@ export const TUNINGS: Tuning[] = [
       { note: "E", octave: 4 },
     ],
   },
+  {
+    id: "cavaquinho",
+    label: "Cavaquinho (DGBD)",
+    strings: [
+      { note: "D", octave: 4 },
+      { note: "G", octave: 4 },
+      { note: "B", octave: 4 },
+      { note: "D", octave: 5 },
+    ],
+  },
+  {
+    id: "ukulele-high-g",
+    label: "Ukulele High-G (gCEA)",
+    strings: [
+      { note: "G", octave: 4 },
+      { note: "C", octave: 4 },
+      { note: "E", octave: 4 },
+      { note: "A", octave: 4 },
+    ],
+  },
+  {
+    id: "ukulele-low-g",
+    label: "Ukulele Low-G (GCEA)",
+    strings: [
+      { note: "G", octave: 3 },
+      { note: "C", octave: 4 },
+      { note: "E", octave: 4 },
+      { note: "A", octave: 4 },
+    ],
+  },
 ];
 
 export const DEFAULT_TUNING = TUNINGS[0];
