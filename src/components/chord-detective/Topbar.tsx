@@ -10,7 +10,9 @@ interface TopbarProps {
   onToggleLight: () => void;
   onOpenHistory: () => void;
   onOpenInfo: () => void;
+  onOpenFind: () => void;
 }
+
 
 export function Topbar({
   tuning,
@@ -21,7 +23,9 @@ export function Topbar({
   onToggleLight,
   onOpenHistory,
   onOpenInfo,
+  onOpenFind,
 }: TopbarProps) {
+
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -79,6 +83,12 @@ export function Topbar({
       {/* Desktop actions */}
       <div className="hidden sm:flex items-center gap-5">
         <button
+          onClick={onOpenFind}
+          className="text-xs font-mono text-primary hover:text-foreground transition-colors uppercase tracking-widest"
+        >
+          Find Chord
+        </button>
+        <button
           onClick={onOpenInfo}
           className="text-xs font-mono text-muted hover:text-foreground transition-colors uppercase tracking-widest"
         >
@@ -90,6 +100,7 @@ export function Topbar({
         >
           History
         </button>
+
         <div className="relative">
           <button
             onClick={() => setSettings((v) => !v)}
@@ -123,6 +134,12 @@ export function Topbar({
         {menu && (
           <div className="absolute right-0 mt-2 w-60 max-w-[calc(100vw-2rem)] bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden z-50 p-2">
             <button
+              onClick={() => { setMenu(false); onOpenFind(); }}
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-surface-2 text-sm font-mono uppercase tracking-widest text-primary"
+            >
+              Find Chord
+            </button>
+            <button
               onClick={() => { setMenu(false); onOpenInfo(); }}
               className="w-full text-left px-3 py-2 rounded-lg hover:bg-surface-2 text-sm font-mono uppercase tracking-widest text-muted hover:text-foreground"
             >
@@ -139,6 +156,7 @@ export function Topbar({
             <SettingRow label="Light theme" active={lightMode} onToggle={onToggleLight} />
           </div>
         )}
+
       </div>
     </nav>
   );

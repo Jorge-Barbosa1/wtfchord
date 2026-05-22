@@ -5,6 +5,9 @@ import { ResultsPanel } from "@/components/chord-detective/ResultsPanel";
 import { Topbar } from "@/components/chord-detective/Topbar";
 import { HistorySheet } from "@/components/chord-detective/HistorySheet";
 import { InfoSheet } from "@/components/chord-detective/InfoSheet";
+import { FindChordSheet } from "@/components/chord-detective/FindChordSheet";
+import type { Voicing } from "@/lib/music/voicings";
+
 import { TUNINGS, DEFAULT_TUNING, type Tuning } from "@/lib/music/tunings";
 import {
   detectChords,
@@ -36,6 +39,8 @@ function Index() {
   const [selectedName, setSelectedName] = useState<string | undefined>();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [findOpen, setFindOpen] = useState(false);
+
 
   const [history, setHistory] = usePersistedState<HistoryEntry[]>("cd.history", []);
   const [favorites, setFavorites] = usePersistedState<HistoryEntry[]>("cd.favorites", []);
@@ -169,7 +174,9 @@ function Index() {
         onToggleLight={() => setLightMode((v) => !v)}
         onOpenHistory={() => setHistoryOpen(true)}
         onOpenInfo={() => setInfoOpen(true)}
+        onOpenFind={() => setFindOpen(true)}
       />
+
 
       <main className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-4 sm:pt-8 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
         <section className="lg:col-span-7 flex flex-col gap-4">
@@ -230,6 +237,18 @@ function Index() {
         onClearHistory={() => setHistory([])}
       />
       <InfoSheet open={infoOpen} onClose={() => setInfoOpen(false)} />
+      <FindChordSheet
+        open={findOpen}
+        onClose={() => setFindOpen(false)}
+        tuning={tuning}
+        leftHanded={leftHanded}
+        onLoadVoicing={(v: Voicing) => {
+          setStrings(v.strings);
+          setResults([]);
+          setSelectedName(undefined);
+        }}
+      />
     </div>
   );
 }
+
