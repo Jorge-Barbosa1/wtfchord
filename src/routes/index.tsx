@@ -5,6 +5,9 @@ import { ResultsPanel } from "@/components/chord-detective/ResultsPanel";
 import { Topbar } from "@/components/chord-detective/Topbar";
 import { HistorySheet } from "@/components/chord-detective/HistorySheet";
 import { InfoSheet } from "@/components/chord-detective/InfoSheet";
+import { FindChordSheet } from "@/components/chord-detective/FindChordSheet";
+import type { Voicing } from "@/lib/music/voicings";
+
 import { TUNINGS, DEFAULT_TUNING, type Tuning } from "@/lib/music/tunings";
 import {
   detectChords,
@@ -36,6 +39,8 @@ function Index() {
   const [selectedName, setSelectedName] = useState<string | undefined>();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [findOpen, setFindOpen] = useState(false);
+
 
   const [history, setHistory] = usePersistedState<HistoryEntry[]>("cd.history", []);
   const [favorites, setFavorites] = usePersistedState<HistoryEntry[]>("cd.favorites", []);
