@@ -171,10 +171,10 @@ function Index() {
         onOpenInfo={() => setInfoOpen(true)}
       />
 
-      <main className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
+      <main className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-4 sm:pt-8 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
         <section className="lg:col-span-7 flex flex-col gap-4">
           <header className="px-1">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tighter">
+            <h1 className="text-xl sm:text-3xl font-extrabold tracking-tighter">
               Map your fingers. <span className="text-muted">Decode the voicing.</span>
             </h1>
             <p className="text-muted text-sm mt-1">
