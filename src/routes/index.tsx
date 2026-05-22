@@ -174,7 +174,9 @@ function Index() {
         onToggleLight={() => setLightMode((v) => !v)}
         onOpenHistory={() => setHistoryOpen(true)}
         onOpenInfo={() => setInfoOpen(true)}
+        onOpenFind={() => setFindOpen(true)}
       />
+
 
       <main className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-4 sm:pt-8 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
         <section className="lg:col-span-7 flex flex-col gap-4">
@@ -235,6 +237,18 @@ function Index() {
         onClearHistory={() => setHistory([])}
       />
       <InfoSheet open={infoOpen} onClose={() => setInfoOpen(false)} />
+      <FindChordSheet
+        open={findOpen}
+        onClose={() => setFindOpen(false)}
+        tuning={tuning}
+        leftHanded={leftHanded}
+        onLoadVoicing={(v: Voicing) => {
+          setStrings(v.strings);
+          setResults([]);
+          setSelectedName(undefined);
+        }}
+      />
     </div>
   );
 }
+
