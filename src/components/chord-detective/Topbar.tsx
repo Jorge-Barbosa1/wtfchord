@@ -10,7 +10,9 @@ interface TopbarProps {
   onToggleLight: () => void;
   onOpenHistory: () => void;
   onOpenInfo: () => void;
+  onOpenFind: () => void;
 }
+
 
 export function Topbar({
   tuning,
@@ -21,7 +23,9 @@ export function Topbar({
   onToggleLight,
   onOpenHistory,
   onOpenInfo,
+  onOpenFind,
 }: TopbarProps) {
+
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState(false);
   const [menu, setMenu] = useState(false);
