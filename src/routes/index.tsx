@@ -6,9 +6,18 @@ import { Topbar } from "@/components/chord-detective/Topbar";
 import { HistorySheet } from "@/components/chord-detective/HistorySheet";
 import { InfoSheet } from "@/components/chord-detective/InfoSheet";
 import { FindChordSheet } from "@/components/chord-detective/FindChordSheet";
+import { PaywallModal } from "@/components/chord-detective/PaywallModal";
+import { CustomTuningSheet } from "@/components/chord-detective/CustomTuningSheet";
 import type { Voicing } from "@/lib/music/voicings";
 
-import { TUNINGS, DEFAULT_TUNING, type Tuning } from "@/lib/music/tunings";
+import {
+  TUNINGS,
+  DEFAULT_TUNING,
+  DEFAULT_CUSTOM_STRINGS,
+  CUSTOM_TUNING_ID,
+  makeCustomTuning,
+  type Tuning,
+} from "@/lib/music/tunings";
 import {
   detectChords,
   notesFromInput,
@@ -16,6 +25,7 @@ import {
   type StringState,
 } from "@/lib/music/detect";
 import { usePersistedState, type HistoryEntry } from "@/hooks/usePersistedState";
+import { useProStatus, setProStatus } from "@/hooks/useProStatus";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -27,10 +37,37 @@ function emptyStringsFor(t: Tuning): StringState[] {
 
 function Index() {
   const [tuningId, setTuningId] = usePersistedState<string>("cd.tuning", DEFAULT_TUNING.id);
-  const tuning = useMemo(
-    () => TUNINGS.find((t) => t.id === tuningId) ?? DEFAULT_TUNING,
-    [tuningId]
-  );
+  const [customStrings, setCustomStrings] = usePersistedState<
+    { note: string; octave: number }[] | null
+  >("cd.customTuning", null);
+
+  const { isPro } = useProStatus();
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  const [customOpen, setCustomOpen] = useState(false);
+
+  // Handle ?activated=true from Stripe redirect
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("activated") === "true") {
+      setProStatus(true);
+      params.delete("activated");
+      const newSearch = params.toString();
+      const newUrl =
+        window.location.pathname + (newSearch ? `?${newSearch}` : "") + window.location.hash;
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, []);
+
+  const tuning = useMemo<Tuning>(() => {
+    if (tuningId === CUSTOM_TUNING_ID) {
+      return makeCustomTuning(customStrings ?? DEFAULT_CUSTOM_STRINGS);
+    }
+    const found = TUNINGS.find((t) => t.id === tuningId) ?? DEFAULT_TUNING;
+    // Guard: if a saved Pro tuning is selected without Pro status, fall back to default
+    if (found.pro && !isPro) return DEFAULT_TUNING;
+    return found;
+  }, [tuningId, customStrings, isPro]);
 
   const [strings, setStrings] = useState<StringState[]>(() => emptyStringsFor(tuning));
   const [leftHanded, setLeftHanded] = usePersistedState<boolean>("cd.left", false);
@@ -40,7 +77,6 @@ function Index() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const [findOpen, setFindOpen] = useState(false);
-
 
   const [history, setHistory] = usePersistedState<HistoryEntry[]>("cd.history", []);
   const [favorites, setFavorites] = usePersistedState<HistoryEntry[]>("cd.favorites", []);
@@ -63,7 +99,6 @@ function Index() {
     setStrings((prev) => {
       const next = [...prev];
       const cur = next[stringIndex];
-      // Toggle off if same fret
       if (cur && typeof cur === "object" && cur.fret === fret) {
         next[stringIndex] = null;
       } else {
@@ -77,7 +112,6 @@ function Index() {
     setStrings((prev) => {
       const next = [...prev];
       const cur = next[stringIndex];
-      // cycle: null -> open -> mute -> null (also clears fret marker)
       if (cur === null) next[stringIndex] = "open";
       else if (cur === "open") next[stringIndex] = "mute";
       else if (cur === "mute") next[stringIndex] = null;
@@ -139,12 +173,18 @@ function Index() {
   }, [favorites, results, selectedName]);
 
   const onLoadEntry = (e: HistoryEntry) => {
-    const t = TUNINGS.find((tt) => tt.id === e.tuningId) ?? DEFAULT_TUNING;
-    setTuningId(t.id);
-    // wait for tuning effect to reset, then set strings
+    const baseT =
+      e.tuningId === CUSTOM_TUNING_ID
+        ? makeCustomTuning(customStrings ?? DEFAULT_CUSTOM_STRINGS)
+        : TUNINGS.find((tt) => tt.id === e.tuningId) ?? DEFAULT_TUNING;
+    if (baseT.pro && !isPro) {
+      setPaywallOpen(true);
+      return;
+    }
+    setTuningId(baseT.id);
     requestAnimationFrame(() => {
       setStrings(e.strings);
-      const r = detectChords({ tuning: t, strings: e.strings });
+      const r = detectChords({ tuning: baseT, strings: e.strings });
       setResults(r);
       setSelectedName(e.name);
       setHistoryOpen(false);
@@ -168,6 +208,7 @@ function Index() {
       <Topbar
         tuning={tuning}
         onTuning={(t) => setTuningId(t.id)}
+        onSelectTuningId={(id) => setTuningId(id)}
         leftHanded={leftHanded}
         onToggleLeft={() => setLeftHanded((v) => !v)}
         lightMode={lightMode}
@@ -175,8 +216,10 @@ function Index() {
         onOpenHistory={() => setHistoryOpen(true)}
         onOpenInfo={() => setInfoOpen(true)}
         onOpenFind={() => setFindOpen(true)}
+        onRequestPro={() => setPaywallOpen(true)}
+        onOpenCustom={() => setCustomOpen(true)}
+        hasCustomTuning={!!customStrings}
       />
-
 
       <main className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-4 sm:pt-8 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
         <section className="lg:col-span-7 flex flex-col gap-4">
@@ -248,7 +291,17 @@ function Index() {
           setSelectedName(undefined);
         }}
       />
+      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} />
+      <CustomTuningSheet
+        open={customOpen}
+        initial={customStrings ?? DEFAULT_CUSTOM_STRINGS}
+        onClose={() => setCustomOpen(false)}
+        onConfirm={(s) => {
+          setCustomStrings(s);
+          setTuningId(CUSTOM_TUNING_ID);
+          setCustomOpen(false);
+        }}
+      />
     </div>
   );
 }
-
