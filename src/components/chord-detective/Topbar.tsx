@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { TUNINGS, type Tuning } from "@/lib/music/tunings";
+import { TUNINGS, CUSTOM_TUNING_ID, type Tuning } from "@/lib/music/tunings";
+import { useProStatus } from "@/hooks/useProStatus";
 
 interface TopbarProps {
   tuning: Tuning;
   onTuning: (t: Tuning) => void;
+  onSelectTuningId: (id: string) => void;
   leftHanded: boolean;
   onToggleLeft: () => void;
   lightMode: boolean;
@@ -11,12 +13,15 @@ interface TopbarProps {
   onOpenHistory: () => void;
   onOpenInfo: () => void;
   onOpenFind: () => void;
+  onRequestPro: () => void;
+  onOpenCustom: () => void;
+  hasCustomTuning: boolean;
 }
-
 
 export function Topbar({
   tuning,
   onTuning,
+  onSelectTuningId,
   leftHanded,
   onToggleLeft,
   lightMode,
@@ -24,7 +29,11 @@ export function Topbar({
   onOpenHistory,
   onOpenInfo,
   onOpenFind,
+  onRequestPro,
+  onOpenCustom,
+  hasCustomTuning,
 }: TopbarProps) {
+  const { isPro } = useProStatus();
 
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState(false);
@@ -39,8 +48,29 @@ export function Topbar({
     return () => window.removeEventListener("keydown", onEsc);
   }, [open, settings, menu]);
 
-  // Short label for mobile: strip the parenthetical if present
   const shortLabel = tuning.label.replace(/\s*\(.*\)\s*/, "") || tuning.label;
+
+  const handlePickTuning = (t: Tuning) => {
+    setOpen(false);
+    if (t.pro && !isPro) {
+      onRequestPro();
+      return;
+    }
+    onTuning(t);
+  };
+
+  const handlePickCustom = () => {
+    setOpen(false);
+    if (!isPro) {
+      onRequestPro();
+      return;
+    }
+    if (hasCustomTuning) {
+      onSelectTuningId(CUSTOM_TUNING_ID);
+    } else {
+      onOpenCustom();
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 bg-background/80 backdrop-blur-xl border-b border-border">
@@ -48,6 +78,11 @@ export function Topbar({
         <span className="font-extrabold tracking-tighter text-lg sm:text-xl italic shrink-0">
           WTFChord
         </span>
+        {isPro && (
+          <span className="text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 shrink-0">
+            Pro
+          </span>
+        )}
         <div className="hidden sm:block h-4 w-px bg-border" />
         <div className="relative min-w-0">
           <button
@@ -62,19 +97,62 @@ export function Topbar({
             <svg className="size-3 opacity-50 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
           </button>
           {open && (
-            <div className="absolute left-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden z-50">
-              {TUNINGS.map((t) => (
+            <div className="absolute left-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden z-50">
+              {TUNINGS.map((t) => {
+                const locked = !!t.pro && !isPro;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => handlePickTuning(t)}
+                    className={`w-full text-left px-4 py-3 hover:bg-surface-2 transition-colors flex items-center justify-between ${
+                      t.id === tuning.id ? "text-primary" : ""
+                    }`}
+                  >
+                    <span className="text-sm font-medium">{t.label}</span>
+                    <span className="flex items-center gap-2">
+                      {t.pro && (
+                        <span className={`text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${
+                          locked
+                            ? "bg-surface-2 text-muted border-border"
+                            : "bg-primary/15 text-primary border-primary/30"
+                        }`}>
+                          {locked ? "🔒 Pro" : "Pro"}
+                        </span>
+                      )}
+                      {t.id === tuning.id && <span className="font-mono text-[10px]">●</span>}
+                    </span>
+                  </button>
+                );
+              })}
+              <div className="h-px bg-border" />
+              <button
+                onClick={handlePickCustom}
+                className={`w-full text-left px-4 py-3 hover:bg-surface-2 transition-colors flex items-center justify-between ${
+                  tuning.id === CUSTOM_TUNING_ID ? "text-primary" : ""
+                }`}
+              >
+                <span className="text-sm font-medium">
+                  Custom (6 strings){hasCustomTuning && tuning.id !== CUSTOM_TUNING_ID ? " — saved" : ""}
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className={`text-[9px] font-mono uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${
+                    !isPro
+                      ? "bg-surface-2 text-muted border-border"
+                      : "bg-primary/15 text-primary border-primary/30"
+                  }`}>
+                    {!isPro ? "🔒 Pro" : "Pro"}
+                  </span>
+                  {tuning.id === CUSTOM_TUNING_ID && <span className="font-mono text-[10px]">●</span>}
+                </span>
+              </button>
+              {isPro && hasCustomTuning && (
                 <button
-                  key={t.id}
-                  onClick={() => { onTuning(t); setOpen(false); }}
-                  className={`w-full text-left px-4 py-3 hover:bg-surface-2 transition-colors flex items-center justify-between ${
-                    t.id === tuning.id ? "text-primary" : ""
-                  }`}
+                  onClick={() => { setOpen(false); onOpenCustom(); }}
+                  className="w-full text-left px-4 py-2 hover:bg-surface-2 transition-colors text-[10px] font-mono uppercase tracking-widest text-muted hover:text-foreground border-t border-border"
                 >
-                  <span className="text-sm font-medium">{t.label}</span>
-                  {t.id === tuning.id && <span className="font-mono text-[10px]">●</span>}
+                  Edit custom tuning →
                 </button>
-              ))}
+              )}
             </div>
           )}
         </div>
@@ -156,7 +234,6 @@ export function Topbar({
             <SettingRow label="Light theme" active={lightMode} onToggle={onToggleLight} />
           </div>
         )}
-
       </div>
     </nav>
   );
