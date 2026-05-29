@@ -1,37 +1,85 @@
-## Mobile issue found
 
-At 390px the topbar overflows: the tuning pill ("STANDARD (EADGBE)") visually collides with "Informations / History / Settings" and gets clipped behind them. Root cause: too many text actions in the right cluster + a long tuning label in the left cluster, all rendered inline on every breakpoint.
+## Objetivo
 
-## Fix plan (UI only)
+Adicionar contas de utilizador ao WTFChord para que o estado Pro seja sincronizado entre dispositivos via backend (Lovable Cloud), em vez de viver só no `localStorage`.
 
-**`src/components/chord-detective/Topbar.tsx`**
-1. On mobile (`< sm`), collapse the right cluster into a single icon button (☰) that opens a small dropdown containing: Informations, History, Left-handed toggle, Light theme toggle. On `sm+`, keep the current inline layout.
-2. Shrink the tuning pill on mobile: hide the small "TUNING" label, keep only the value, and shorten Standard's label display (e.g. show "EADGBE" rather than "Standard (EADGBE)" under `sm`).
-3. Remove the decorative status dot on mobile (keep on `sm+`) to free space.
-4. Make the tuning dropdown panel width-capped to viewport (`max-w-[calc(100vw-2rem)]`) so it never overflows.
+## O que vai ser feito
 
-**`src/routes/index.tsx`** (tiny)
-- Reduce the h1 from `text-2xl` to `text-xl` on mobile so the hero doesn't wrap to 3 lines, and tighten the `pt-6` to `pt-4` on mobile.
+### 1. Ativar Lovable Cloud
+Provisiona Postgres + Auth automaticamente. Sem custos adicionais para começar.
 
-No business-logic / detection / tuning data changes.
+### 2. Base de dados
+Tabela `profiles`:
+- `id` (uuid, FK → `auth.users`, PK)
+- `email` (text)
+- `is_pro` (bool, default false)
+- `pro_activated_at` (timestamptz, nullable)
+- `created_at` (timestamptz, default now)
 
-## Next features — my recommendation
+RLS: cada user só lê/edita o seu próprio profile. Trigger automático cria profile no signup.
 
-Both ideas you mentioned are great. Suggested order:
+### 3. Autenticação
+- Email/password + Google (via broker do Lovable).
+- Página `/login` (com tabs sign in / sign up).
+- Login **opcional** — a app continua a funcionar sem conta. Só é pedido quando o user quer comprar Pro ou sincronizar.
+- Botão "Sign in" no `Topbar` (substitui o nada que está lá agora quando não autenticado). Quando autenticado, mostra email + logout.
 
-1. **Capo** (ship first — small, high value)
-   - Add a Capo selector in the topbar (0–12).
-   - In `detect.ts`, transpose detected pitch classes down by the capo offset before matching, and label results with both the "shape" name (what you're fingering) and the "sounding" name (what's heard). Display as `C (sounds D)` when capo > 0.
-   - Visual: shade frets `< capo` on the fretboard and draw a capo bar across the capo fret.
+### 4. Stripe — passar de `?activated=true` para webhook server-side
+**Atual:** o user paga, é redirecionado com `?activated=true`, e marcamos Pro no localStorage. Frágil (qualquer um pode adicionar `?activated=true` no URL).
 
-2. **Play the chord** (real samples, not synth)
-   - Use a small set of pre-recorded single-note samples per instrument (guitar, cavaquinho, ukulele) hosted as static assets, triggered with the Web Audio API. Strum = sequential note triggers with ~15 ms offset.
-   - Add a ▶ button next to the detected chord in `ResultsPanel`.
-   - Trade-off: hosting samples adds ~1–2 MB per instrument. Alternative: start with guitar-only and add others later.
+**Novo:**
+- Server route público em `/api/public/stripe-webhook` que:
+  - Valida assinatura do webhook do Stripe.
+  - No evento `checkout.session.completed`, faz match do user (por `client_reference_id` = user.id, ou por email) e marca `is_pro = true`.
+- No `PaywallModal`, o link de checkout passa a incluir `client_reference_id` e prefill do email do user autenticado.
+- Secrets necessários: `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` (pedidos ao user quando chegarmos a esse passo).
+- O `?activated=true` deixa de ser usado como fonte de verdade — fica só como hint de "obrigado pela compra" e refresca o estado a partir do servidor.
 
-3. Other quick wins worth considering after those:
-   - **Reverse mode**: pick a chord name → see voicings on the current tuning.
-   - **Share link**: encode tuning + strings into the URL so a voicing is shareable.
-   - **Chord diagram export**: download the current voicing as a PNG.
+### 5. Hook `useProStatus` refeito
+Estratégia híbrida (sem partir nada):
+- **Autenticado:** lê `is_pro` do profile via TanStack Query (server function). Esta é a fonte de verdade.
+- **Não autenticado:** continua a ler do `localStorage` (fallback para Pro users existentes que ainda não criaram conta).
+- **Claim automático:** quando um user faz login pela primeira vez e o `localStorage` tem `pro: true`, uma server function `claimLegacyPro` marca `is_pro = true` no profile dele e limpa o localStorage. Sem novo pagamento.
 
-If you approve, I'll implement the mobile fix now, and we can decide which feature to tackle next.
+### 6. UI changes
+- `Topbar`: avatar/email + dropdown com Logout quando autenticado; botão "Sign in" quando não.
+- `PaywallModal`: 
+  - Se não autenticado → step 1 "Cria conta para guardar o teu Pro em todos os dispositivos" com botões de signup.
+  - Se autenticado → vai direto para Stripe com `client_reference_id`.
+
+### 7. Mobile fix (bónus pequeno)
+Verificar que o novo botão de account no `Topbar` cabe bem no menu hamburger mobile.
+
+## Detalhes técnicos
+
+**Stack:** TanStack Start + Lovable Cloud (Supabase por baixo). Server functions com `createServerFn` + `requireSupabaseAuth` para reads/writes scoped ao user. Server route em `src/routes/api/public/stripe-webhook.ts` para o webhook (bypassa auth, valida assinatura).
+
+**Ficheiros novos:**
+- `src/routes/login.tsx`
+- `src/routes/api/public/stripe-webhook.ts`
+- `src/lib/profile.functions.ts` (getProfile, claimLegacyPro)
+- `src/components/chord-detective/AuthButton.tsx`
+
+**Ficheiros editados:**
+- `src/hooks/useProStatus.ts` (estratégia híbrida)
+- `src/components/chord-detective/Topbar.tsx` (auth UI)
+- `src/components/chord-detective/PaywallModal.tsx` (client_reference_id)
+- `src/routes/__root.tsx` (onAuthStateChange listener)
+- `src/routes/index.tsx` (remover lógica do `?activated=true` baseada em localStorage; passar a refetch profile)
+
+**Migração SQL:** tabela `profiles`, grants, RLS, trigger `handle_new_user`.
+
+## Ordem de execução
+
+1. Ativar Lovable Cloud + criar tabela `profiles`.
+2. Páginas auth + Topbar com login/logout.
+3. `useProStatus` híbrido + claim legacy.
+4. `PaywallModal` com `client_reference_id`.
+5. Pedir secrets do Stripe + implementar webhook.
+6. Testar fluxo end-to-end.
+
+## Fora de scope
+
+- Histórico de pagamentos / faturas no UI.
+- Cancelamento de subscrição (o produto é pagamento único de €4,99, não subscrição).
+- Profile editing (avatar, nome, etc.) — `profiles` fica minimalista.
