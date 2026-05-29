@@ -3,7 +3,8 @@ interface PaywallModalProps {
   onClose: () => void;
 }
 
-const CHECKOUT_URL = "https://buy.stripe.com/test_7sY5kD1KygN894n0ti8IU00";
+const CHECKOUT_URL = "https://buy.stripe.com/eVqbIU04m1i69Uk3uwaIM00";
+
 
 export function PaywallModal({ open, onClose }: PaywallModalProps) {
   if (!open) return null;
