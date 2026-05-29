@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { TUNINGS, CUSTOM_TUNING_ID, type Tuning } from "@/lib/music/tunings";
 import { useProStatus } from "@/hooks/useProStatus";
+import { AuthButton } from "./AuthButton";
 
 interface TopbarProps {
   tuning: Tuning;
@@ -193,9 +194,7 @@ export function Topbar({
             </div>
           )}
         </div>
-        <div className="size-8 rounded-full bg-surface border border-border flex items-center justify-center">
-          <div className="size-1.5 rounded-full bg-success shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-        </div>
+        <AuthButton />
       </div>
 
       {/* Mobile menu */}
@@ -232,6 +231,8 @@ export function Topbar({
             <div className="my-2 h-px bg-border" />
             <SettingRow label="Left-handed mode" active={leftHanded} onToggle={onToggleLeft} />
             <SettingRow label="Light theme" active={lightMode} onToggle={onToggleLight} />
+            <div className="my-2 h-px bg-border" />
+            <AuthButton compact />
           </div>
         )}
       </div>
