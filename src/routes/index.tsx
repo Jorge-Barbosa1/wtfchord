@@ -26,6 +26,8 @@ import {
 } from "@/lib/music/detect";
 import { usePersistedState, type HistoryEntry } from "@/hooks/usePersistedState";
 import { useProStatus, setProStatus } from "@/hooks/useProStatus";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -42,22 +44,28 @@ function Index() {
   >("cd.customTuning", null);
 
   const { isPro } = useProStatus();
+  const { user } = useAuth();
+  const qc = useQueryClient();
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [customOpen, setCustomOpen] = useState(false);
 
-  // Handle ?activated=true from Stripe redirect
+  // Handle ?activated=true from Stripe redirect: refresh server-side Pro,
+  // and set local flag as immediate fallback for non-authenticated users.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("activated") === "true") {
-      setProStatus(true);
+      if (!user) setProStatus(true);
+      qc.invalidateQueries({ queryKey: ["profile"] });
       params.delete("activated");
       const newSearch = params.toString();
       const newUrl =
         window.location.pathname + (newSearch ? `?${newSearch}` : "") + window.location.hash;
       window.history.replaceState({}, "", newUrl);
+      // Poll once more after a short delay in case the webhook lags.
+      setTimeout(() => qc.invalidateQueries({ queryKey: ["profile"] }), 3000);
     }
-  }, []);
+  }, [user, qc]);
 
   const tuning = useMemo<Tuning>(() => {
     if (tuningId === CUSTOM_TUNING_ID) {
