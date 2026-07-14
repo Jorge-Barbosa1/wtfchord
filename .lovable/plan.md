@@ -1,85 +1,97 @@
+# WTFChord — Roadmap de melhorias
 
-## Objetivo
+O bounce rate a 100% + a landing atual (que abre diretamente no fretboard sem contexto) são o problema #1. A maior parte do plano ataca isso: dar razão para ficar, criar páginas indexáveis, e polir o resto.
 
-Adicionar contas de utilizador ao WTFChord para que o estado Pro seja sincronizado entre dispositivos via backend (Lovable Cloud), em vez de viver só no `localStorage`.
+---
 
-## O que vai ser feito
+## Fase 1 — Reduzir bounce & primeiro impacto (semana 1)
 
-### 1. Ativar Lovable Cloud
-Provisiona Postgres + Auth automaticamente. Sem custos adicionais para começar.
+Objetivo: dar a um visitante que caiu no site 5 segundos de "ok, isto é útil e vou tentar".
 
-### 2. Base de dados
-Tabela `profiles`:
-- `id` (uuid, FK → `auth.users`, PK)
-- `email` (text)
-- `is_pro` (bool, default false)
-- `pro_activated_at` (timestamptz, nullable)
-- `created_at` (timestamptz, default now)
+1. **Hero section acima do fretboard** (na `/`)
+  - H1 curto ("What chord is this?"), subheading a explicar em 1 frase
+  - 3 badges com prova: "6 tunings", "1200+ chords", "No signup needed"
+  - Micro-demo: fretboard já com um Am pré-preenchido + botão "Try identifying this" que dispara animação → resultado. Mostra o valor sem exigir input.
+2. **Onboarding contextual** — primeira visita mostra 2 tooltips (tap fret / press identify) que auto-dismissam. Guardado em localStorage.
+3. **Estado vazio do painel de resultados** com CTA claro em vez de só "Awaiting input" (adicionar "Or try a preset →" com 4 acordes rápidos: C, G, Dm, F#dim).
+4. **Corrigir "Informations" → "Guide"** e rename "History" → "Recent".
+5. **Social proof rodapé**: contador de acordes identificados (server-side, incrementado no `onIdentify`, cache 5min).
 
-RLS: cada user só lê/edita o seu próprio profile. Trigger automático cria profile no signup.
+## Fase 2 — SEO real (semana 1-2)
 
-### 3. Autenticação
-- Email/password + Google (via broker do Lovable).
-- Página `/login` (com tabs sign in / sign up).
-- Login **opcional** — a app continua a funcionar sem conta. Só é pedido quando o user quer comprar Pro ou sincronizar.
-- Botão "Sign in" no `Topbar` (substitui o nada que está lá agora quando não autenticado). Quando autenticado, mostra email + logout.
+O site tem só uma rota indexável. Isso mata o SEO — Google não tem nada para rankear.
 
-### 4. Stripe — passar de `?activated=true` para webhook server-side
-**Atual:** o user paga, é redirecionado com `?activated=true`, e marcamos Pro no localStorage. Frágil (qualquer um pode adicionar `?activated=true` no URL).
+1. **Chord library route dinâmica** — `/chord/$name` (ex: `/chord/c-major`, `/chord/f-sharp-minor-7`). Gera ~200 páginas cobrindo os acordes mais procurados, cada uma com:
+  - Voicings múltiplos (já temos o motor em `voicings.ts`)
+  - Notas, intervalos, inversões
+  - Head `<title>`, `<description>`, `og:image` gerado server-side com o diagrama
+  - JSON-LD `MusicComposition`
+  - Sitemap dinâmico (já existe `sitemap[.]xml.ts` — expandir)
+2. **Tuning pages** — `/tuning/$id` (standard, drop-d, dadgad, open-g, ukulele, cavaquinho). Cada uma explica a afinação + lista dos 20 acordes mais comuns nessa afinação com link para `/chord/...`.
+3. **Landing pages de intenção**:
+  - `/guitar-chord-finder` (keyword principal)
+  - `/ukulele-chord-finder`
+  - `/reverse-chord-lookup`
+   Cada uma com H1 dedicado, copy diferente, e embed do fretboard.
+4. **Blog em `/blog/$slug**` — 5 posts iniciais escritos manualmente ("How to read chord diagrams", "DADGAD tuning guide", etc.). Não geramos — só a infra do route + MDX.
+5. `**robots.txt` + sitemap** — verificar que sitemap inclui todas as rotas novas.
+6. **Meta description mais forte na `/**` (a atual funciona mas é longa).
 
-**Novo:**
-- Server route público em `/api/public/stripe-webhook` que:
-  - Valida assinatura do webhook do Stripe.
-  - No evento `checkout.session.completed`, faz match do user (por `client_reference_id` = user.id, ou por email) e marca `is_pro = true`.
-- No `PaywallModal`, o link de checkout passa a incluir `client_reference_id` e prefill do email do user autenticado.
-- Secrets necessários: `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` (pedidos ao user quando chegarmos a esse passo).
-- O `?activated=true` deixa de ser usado como fonte de verdade — fica só como hint de "obrigado pela compra" e refresca o estado a partir do servidor.
+## Fase 3 — Performance (dias)
 
-### 5. Hook `useProStatus` refeito
-Estratégia híbrida (sem partir nada):
-- **Autenticado:** lê `is_pro` do profile via TanStack Query (server function). Esta é a fonte de verdade.
-- **Não autenticado:** continua a ler do `localStorage` (fallback para Pro users existentes que ainda não criaram conta).
-- **Claim automático:** quando um user faz login pela primeira vez e o `localStorage` tem `pro: true`, uma server function `claimLegacyPro` marca `is_pro = true` no profile dele e limpa o localStorage. Sem novo pagamento.
+Lighthouse já dá 99, mas há coisas concretas a limpar:
 
-### 6. UI changes
-- `Topbar`: avatar/email + dropdown com Logout quando autenticado; botão "Sign in" quando não.
-- `PaywallModal`: 
-  - Se não autenticado → step 1 "Cria conta para guardar o teu Pro em todos os dispositivos" com botões de signup.
-  - Se autenticado → vai direto para Stripe com `client_reference_id`.
+1. **Google Fonts render-blocking (economia estimada 290ms)** — mover Inter e JetBrains Mono para self-hosted via `vite-imagetools`/`@fontsource`, com `font-display: swap` e preload da variante 700 (usada no H1). Remove os 2 requests externos críticos.
+2. **Reduce unused JS (98KB)** — code-split `FindChordSheet`, `HistorySheet`, `InfoSheet`, `CustomTuningSheet`, `PaywallModal` com `lazy()` + `Suspense`. Não são precisos no primeiro paint.
+3. **Cache headers** — o worker do `/~flock.js` (7KB) e alguns assets têm TTL curto. Ver se conseguimos aumentar via `wrangler.jsonc` para assets hasheados (1 ano).
+4. **Preload do LCP** — o H1 é o LCP; garantir que a font weight 800 preload está no `head` da `/`.
 
-### 7. Mobile fix (bónus pequeno)
-Verificar que o novo botão de account no `Topbar` cabe bem no menu hamburger mobile.
+## Fase 4 — Features musicais que retêm (semana 2-3)
 
-## Detalhes técnicos
+Estas transformam o site de "one-shot lookup" em ferramenta que se volta.
 
-**Stack:** TanStack Start + Lovable Cloud (Supabase por baixo). Server functions com `createServerFn` + `requireSupabaseAuth` para reads/writes scoped ao user. Server route em `src/routes/api/public/stripe-webhook.ts` para o webhook (bypassa auth, valida assinatura).
+1. **Áudio dos acordes** — Web Audio API (sem samples, síntese aditiva simples com envelope) para "play chord" ao lado do resultado. Zero KB de assets, funciona offline.
+2. **Shareable chord URLs** — `/?tuning=eadgbe&frets=x,3,2,0,1,0` (ou `/chord/c-major`). Botão "Share" copia URL. Dá viral loop.
+3. **Export como imagem** — canvas → PNG do diagrama, com watermark WTFChord. Grande no Instagram/TikTok de professores.
+4. **Progression builder** — segunda tab: adicionar múltiplos acordes em sequência, ver progressão. Precisa Pro (feature nova para o paywall).
+5. **Scale-to-chord** — dado uma escala, sugerir acordes que encaixam.
 
-**Ficheiros novos:**
-- `src/routes/login.tsx`
-- `src/routes/api/public/stripe-webhook.ts`
-- `src/lib/profile.functions.ts` (getProfile, claimLegacyPro)
-- `src/components/chord-detective/AuthButton.tsx`
+## Fase 5 — Backend & Pro (semana 2)
 
-**Ficheiros editados:**
-- `src/hooks/useProStatus.ts` (estratégia híbrida)
-- `src/components/chord-detective/Topbar.tsx` (auth UI)
-- `src/components/chord-detective/PaywallModal.tsx` (client_reference_id)
-- `src/routes/__root.tsx` (onAuthStateChange listener)
-- `src/routes/index.tsx` (remover lógica do `?activated=true` baseada em localStorage; passar a refetch profile)
+1. **Página de conta `/account**` (rota `_authenticated`):
+  - Estado Pro + data ativação
+  - Histórico de acordes sincronizado (mover de localStorage para Postgres com RLS)
+  - Favoritos sincronizados idem
+  - Botão "Delete account" (GDPR)
+2. **Sync de histórico/favoritos server-side** — tabela `user_history`, RLS `user_id = auth.uid()`. Fallback local mantido.
+3. **Analytics de funil** — Plausible ou PostHog. Eventos: `chord_identified`, `paywall_shown`, `checkout_clicked`, `pro_activated`. Sem isto não sabemos o que optimizar.
 
-**Migração SQL:** tabela `profiles`, grants, RLS, trigger `handle_new_user`.
+## Fase 6 — UX polish (paralelo)
 
-## Ordem de execução
+- **Empty state animado** no fretboard antes do primeiro tap
+- **Keyboard shortcuts overlay** (`?` mostra atalhos)
+- **Undo/redo** no fretboard (Cmd+Z)
+- **Dark/light toggle no topbar** em vez de escondido em settings
+- **Mobile: bottom sheet para tuning** em vez de dropdown pequeno
+- **Acessibilidade**: `aria-label` nas frets ("String 3, fret 2, D natural"), focus rings visíveis, contrast do `text-muted` no light mode
 
-1. Ativar Lovable Cloud + criar tabela `profiles`.
-2. Páginas auth + Topbar com login/logout.
-3. `useProStatus` híbrido + claim legacy.
-4. `PaywallModal` com `client_reference_id`.
-5. Pedir secrets do Stripe + implementar webhook.
-6. Testar fluxo end-to-end.
+---
 
-## Fora de scope
+## Priorização recomendada
 
-- Histórico de pagamentos / faturas no UI.
-- Cancelamento de subscrição (o produto é pagamento único de €4,99, não subscrição).
-- Profile editing (avatar, nome, etc.) — `profiles` fica minimalista.
+Se só pudéssemos fazer um sprint de 1 semana, faria por esta ordem (impacto em bounce):
+
+1. Hero + micro-demo pré-preenchido (Fase 1.1, 1.2)
+2. Chord library dinâmica + sitemap (Fase 2.1, 2.5) — trás tráfego novo
+3. Shareable URLs + play áudio (Fase 4.1, 4.2) — dá razão para partilhar
+4. Code-split modais + self-host fonts (Fase 3.1, 3.2)
+5. Analytics (Fase 5.6) — para medir tudo o resto
+
+## Nota técnica
+
+- Todas as páginas novas usam `head()` per-route com meta/og únicos (rule do stack).
+- `og:image` dinâmico por acorde/tuning vai precisar de um server route (`/api/og/chord/$name`) que gera PNG — usar `satori` ou renderizar canvas. Alternativa mais simples: pre-gerar em build time e servir estático.
+- Sync de histórico precisa migração + RLS + GRANTs (padrão do projeto).
+- Novo bucket de storage não é preciso — tudo texto/JSON.
+
+Diz-me qual das fases queres que ataque primeiro (ou se preferes um subset customizado) e faço um plano de implementação detalhado dessa fase.
