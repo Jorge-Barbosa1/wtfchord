@@ -95,8 +95,13 @@ export const Route = createFileRoute("/chord/$slug")({
 });
 
 function ChordPage() {
-  const data = Route.useLoaderData() as ReturnType<typeof Route.options.loader>;
-  const { parsed, voicings, notes } = data;
+  const loaderData = Route.useLoaderData() as {
+    parsed: ReturnType<typeof parseChordSlug> & object;
+    voicings: ReturnType<typeof findVoicings>;
+    notes: string[];
+  };
+  const { parsed, voicings, notes } = loaderData;
+
 
 
   return (
