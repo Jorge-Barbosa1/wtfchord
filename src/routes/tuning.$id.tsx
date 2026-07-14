@@ -50,7 +50,8 @@ export const Route = createFileRoute("/tuning/$id")({
 });
 
 function TuningPage() {
-  const { tuning } = Route.useLoaderData();
+  const { tuning } = Route.useLoaderData() as { tuning: (typeof TUNINGS)[number] };
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
