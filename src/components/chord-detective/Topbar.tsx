@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { TUNINGS, CUSTOM_TUNING_ID, type Tuning } from "@/lib/music/tunings";
 import { useProStatus } from "@/hooks/useProStatus";
 import { AuthButton } from "./AuthButton";
@@ -167,17 +168,29 @@ export function Topbar({
         >
           Find Chord
         </button>
+        <Link
+          to="/chords"
+          className="text-xs font-mono text-muted hover:text-foreground transition-colors uppercase tracking-widest"
+        >
+          Library
+        </Link>
+        <Link
+          to="/tunings"
+          className="text-xs font-mono text-muted hover:text-foreground transition-colors uppercase tracking-widest"
+        >
+          Tunings
+        </Link>
         <button
           onClick={onOpenInfo}
           className="text-xs font-mono text-muted hover:text-foreground transition-colors uppercase tracking-widest"
         >
-          Informations
+          Guide
         </button>
         <button
           onClick={onOpenHistory}
           className="text-xs font-mono text-muted hover:text-foreground transition-colors uppercase tracking-widest"
         >
-          History
+          Recent
         </button>
 
         <div className="relative">
@@ -216,17 +229,31 @@ export function Topbar({
             >
               Find Chord
             </button>
+            <Link
+              to="/chords"
+              onClick={() => setMenu(false)}
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-surface-2 text-sm font-mono uppercase tracking-widest text-muted hover:text-foreground block"
+            >
+              Library
+            </Link>
+            <Link
+              to="/tunings"
+              onClick={() => setMenu(false)}
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-surface-2 text-sm font-mono uppercase tracking-widest text-muted hover:text-foreground block"
+            >
+              Tunings
+            </Link>
             <button
               onClick={() => { setMenu(false); onOpenInfo(); }}
               className="w-full text-left px-3 py-2 rounded-lg hover:bg-surface-2 text-sm font-mono uppercase tracking-widest text-muted hover:text-foreground"
             >
-              Informations
+              Guide
             </button>
             <button
               onClick={() => { setMenu(false); onOpenHistory(); }}
               className="w-full text-left px-3 py-2 rounded-lg hover:bg-surface-2 text-sm font-mono uppercase tracking-widest text-muted hover:text-foreground"
             >
-              History
+              Recent
             </button>
             <div className="my-2 h-px bg-border" />
             <SettingRow label="Left-handed mode" active={leftHanded} onToggle={onToggleLeft} />

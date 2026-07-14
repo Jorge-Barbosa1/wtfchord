@@ -9,11 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TuningsRouteImport } from './routes/tunings'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ChordsRouteImport } from './routes/chords'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TuningIdRouteImport } from './routes/tuning.$id'
+import { Route as ChordSlugRouteImport } from './routes/chord.$slug'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 
+const TuningsRoute = TuningsRouteImport.update({
+  id: '/tunings',
+  path: '/tunings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -24,9 +33,24 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChordsRoute = ChordsRouteImport.update({
+  id: '/chords',
+  path: '/chords',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TuningIdRoute = TuningIdRouteImport.update({
+  id: '/tuning/$id',
+  path: '/tuning/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChordSlugRoute = ChordSlugRouteImport.update({
+  id: '/chord/$slug',
+  path: '/chord/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
@@ -37,45 +61,88 @@ const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/chords': typeof ChordsRoute
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/tunings': typeof TuningsRoute
+  '/chord/$slug': typeof ChordSlugRoute
+  '/tuning/$id': typeof TuningIdRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/chords': typeof ChordsRoute
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/tunings': typeof TuningsRoute
+  '/chord/$slug': typeof ChordSlugRoute
+  '/tuning/$id': typeof TuningIdRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/chords': typeof ChordsRoute
   '/login': typeof LoginRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/tunings': typeof TuningsRoute
+  '/chord/$slug': typeof ChordSlugRoute
+  '/tuning/$id': typeof TuningIdRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/sitemap.xml' | '/api/public/stripe-webhook'
+  fullPaths:
+    | '/'
+    | '/chords'
+    | '/login'
+    | '/sitemap.xml'
+    | '/tunings'
+    | '/chord/$slug'
+    | '/tuning/$id'
+    | '/api/public/stripe-webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/sitemap.xml' | '/api/public/stripe-webhook'
+  to:
+    | '/'
+    | '/chords'
+    | '/login'
+    | '/sitemap.xml'
+    | '/tunings'
+    | '/chord/$slug'
+    | '/tuning/$id'
+    | '/api/public/stripe-webhook'
   id:
     | '__root__'
     | '/'
+    | '/chords'
     | '/login'
     | '/sitemap.xml'
+    | '/tunings'
+    | '/chord/$slug'
+    | '/tuning/$id'
     | '/api/public/stripe-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChordsRoute: typeof ChordsRoute
   LoginRoute: typeof LoginRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TuningsRoute: typeof TuningsRoute
+  ChordSlugRoute: typeof ChordSlugRoute
+  TuningIdRoute: typeof TuningIdRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tunings': {
+      id: '/tunings'
+      path: '/tunings'
+      fullPath: '/tunings'
+      preLoaderRoute: typeof TuningsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -90,11 +157,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chords': {
+      id: '/chords'
+      path: '/chords'
+      fullPath: '/chords'
+      preLoaderRoute: typeof ChordsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tuning/$id': {
+      id: '/tuning/$id'
+      path: '/tuning/$id'
+      fullPath: '/tuning/$id'
+      preLoaderRoute: typeof TuningIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chord/$slug': {
+      id: '/chord/$slug'
+      path: '/chord/$slug'
+      fullPath: '/chord/$slug'
+      preLoaderRoute: typeof ChordSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/stripe-webhook': {
@@ -109,8 +197,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChordsRoute: ChordsRoute,
   LoginRoute: LoginRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TuningsRoute: TuningsRoute,
+  ChordSlugRoute: ChordSlugRoute,
+  TuningIdRoute: TuningIdRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
