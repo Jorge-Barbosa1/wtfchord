@@ -95,7 +95,9 @@ export const Route = createFileRoute("/chord/$slug")({
 });
 
 function ChordPage() {
-  const { parsed, voicings, notes } = Route.useLoaderData();
+  const data = Route.useLoaderData() as ReturnType<typeof Route.options.loader>;
+  const { parsed, voicings, notes } = data;
+
 
   return (
     <div className="min-h-screen bg-background text-foreground">
