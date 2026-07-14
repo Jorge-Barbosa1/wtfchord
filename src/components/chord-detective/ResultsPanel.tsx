@@ -1,5 +1,17 @@
 import type { DetectionResult } from "@/lib/music/detect";
 
+interface Preset {
+  label: string;
+  frets: (number | "x" | "o")[]; // low to high for standard EADGBE
+}
+
+const PRESETS: Preset[] = [
+  { label: "C major",  frets: ["x", 3, 2, 0, 1, 0] },
+  { label: "G major",  frets: [3, 2, 0, 0, 0, 3] },
+  { label: "D major",  frets: ["x", "x", 0, 2, 3, 2] },
+  { label: "A minor",  frets: ["x", 0, 2, 2, 1, 0] },
+];
+
 interface ResultsPanelProps {
   results: DetectionResult[];
   notes: string[];
@@ -7,6 +19,8 @@ interface ResultsPanelProps {
   selectedName?: string;
   onFavorite?: (r: DetectionResult) => void;
   isFavorite?: boolean;
+  onLoadPreset?: (frets: (number | "x" | "o")[]) => void;
+  showPresets?: boolean;
 }
 
 export function ResultsPanel({
@@ -16,6 +30,8 @@ export function ResultsPanel({
   selectedName,
   onFavorite,
   isFavorite,
+  onLoadPreset,
+  showPresets,
 }: ResultsPanelProps) {
   if (results.length === 0) {
     return (
@@ -29,6 +45,26 @@ export function ResultsPanel({
           <span className="font-mono text-danger">X</span> to mute. Then press{" "}
           <span className="font-bold text-foreground">Identify Chord</span>.
         </p>
+
+        {showPresets && onLoadPreset && (
+          <div className="mt-8">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted mb-3">
+              Or try a preset →
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {PRESETS.map((p) => (
+                <button
+                  key={p.label}
+                  onClick={() => onLoadPreset(p.frets)}
+                  className="px-3 py-3 rounded-xl bg-surface-2 border border-border hover:border-primary/50 hover:text-primary text-sm font-bold transition-colors text-left"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mt-8 grid grid-cols-3 gap-2">
           {["Tap", "Identify", "Discover"].map((s, i) => (
             <div
@@ -43,6 +79,7 @@ export function ResultsPanel({
       </div>
     );
   }
+
 
   const primary = results.find((r) => r.name === selectedName) ?? results[0];
   const alternatives = results.filter((r) => r.name !== primary.name);
