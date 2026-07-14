@@ -229,12 +229,38 @@ function Index() {
         hasCustomTuning={!!customStrings}
       />
 
-      <main className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-4 sm:pt-8 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
+      <main className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 pb-24">
+        <section className="mb-6 sm:mb-8">
+          <div className="rounded-3xl border border-border bg-surface/40 p-5 sm:p-7">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
+                Free · No signup
+              </span>
+              <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full bg-surface-2 text-muted border border-border">
+                6 tunings
+              </span>
+              <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full bg-surface-2 text-muted border border-border">
+                1,500+ voicings
+              </span>
+            </div>
+            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tighter leading-[1.05]">
+              What chord is this?{" "}
+              <span className="text-muted">Tap the frets, get the name.</span>
+            </h1>
+            <p className="text-muted text-sm sm:text-base mt-3 max-w-2xl">
+              Reverse chord finder for guitar, ukulele, mandolin, and cavaquinho.
+              Map the fingering you're holding — we'll name it, show the notes,
+              intervals, and every alternative interpretation.
+            </p>
+          </div>
+        </section>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
         <section className="lg:col-span-7 flex flex-col gap-4">
           <header className="px-1">
-            <h1 className="text-xl sm:text-3xl font-extrabold tracking-tighter">
+            <h2 className="text-lg sm:text-xl font-extrabold tracking-tighter">
               Map your fingers. <span className="text-muted">Decode the voicing.</span>
-            </h1>
+            </h2>
             <p className="text-muted text-sm mt-1">
               Tap a fret to place a finger. <span className="font-mono text-primary">O</span> opens
               a string, <span className="font-mono text-danger">X</span> mutes it.
@@ -275,8 +301,23 @@ function Index() {
             onPickAlternative={(r) => setSelectedName(r.name)}
             onFavorite={onFavorite}
             isFavorite={isFavorite}
+            showPresets={tuning.id === "standard"}
+            onLoadPreset={(frets) => {
+              const next: StringState[] = frets.map((f) => {
+                if (f === "x") return "mute";
+                if (f === "o" || f === 0) return "open";
+                return { fret: f };
+              });
+              setStrings(next);
+              requestAnimationFrame(() => {
+                const r = detectChords({ tuning, strings: next });
+                setResults(r);
+                setSelectedName(r[0]?.name);
+              });
+            }}
           />
         </aside>
+        </div>
       </main>
 
       <HistorySheet
