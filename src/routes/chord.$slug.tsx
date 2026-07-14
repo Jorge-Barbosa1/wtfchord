@@ -22,7 +22,9 @@ export const Route = createFileRoute("/chord/$slug")({
     const voicings = findVoicings(DEFAULT_TUNING, parsed.rootPc, parsed.intervals, {
       limit: 6,
     });
-    const notes = parsed.intervals.map((iv) => noteName((parsed.rootPc + iv) % 12));
+    const notes: string[] = parsed.intervals.map((iv: number) =>
+      noteName((parsed.rootPc + iv) % 12),
+    );
     return { parsed, voicings, notes };
   },
   head: ({ loaderData, params }) => {
