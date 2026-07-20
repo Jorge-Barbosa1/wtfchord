@@ -180,6 +180,12 @@ export function Topbar({
         >
           Tunings
         </Link>
+        <Link
+          to="/progressions"
+          className="text-xs font-mono text-muted hover:text-foreground transition-colors uppercase tracking-widest"
+        >
+          Progressions
+        </Link>
         <button
           onClick={onOpenInfo}
           className="text-xs font-mono text-muted hover:text-foreground transition-colors uppercase tracking-widest"
@@ -242,6 +248,13 @@ export function Topbar({
               className="w-full text-left px-3 py-2 rounded-lg hover:bg-surface-2 text-sm font-mono uppercase tracking-widest text-muted hover:text-foreground block"
             >
               Tunings
+            </Link>
+            <Link
+              to="/progressions"
+              onClick={() => setMenu(false)}
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-surface-2 text-sm font-mono uppercase tracking-widest text-muted hover:text-foreground block"
+            >
+              Progressions
             </Link>
             <button
               onClick={() => { setMenu(false); onOpenInfo(); }}
