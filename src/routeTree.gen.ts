@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TuningsRouteImport } from './routes/tunings'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ProgressionsRouteImport } from './routes/progressions'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ChordsRouteImport } from './routes/chords'
 import { Route as IndexRouteImport } from './routes/index'
@@ -26,6 +27,11 @@ const TuningsRoute = TuningsRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgressionsRoute = ProgressionsRouteImport.update({
+  id: '/progressions',
+  path: '/progressions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chords': typeof ChordsRoute
   '/login': typeof LoginRoute
+  '/progressions': typeof ProgressionsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tunings': typeof TuningsRoute
   '/chord/$slug': typeof ChordSlugRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chords': typeof ChordsRoute
   '/login': typeof LoginRoute
+  '/progressions': typeof ProgressionsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tunings': typeof TuningsRoute
   '/chord/$slug': typeof ChordSlugRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/chords': typeof ChordsRoute
   '/login': typeof LoginRoute
+  '/progressions': typeof ProgressionsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tunings': typeof TuningsRoute
   '/chord/$slug': typeof ChordSlugRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/chords'
     | '/login'
+    | '/progressions'
     | '/sitemap.xml'
     | '/tunings'
     | '/chord/$slug'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/chords'
     | '/login'
+    | '/progressions'
     | '/sitemap.xml'
     | '/tunings'
     | '/chord/$slug'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/chords'
     | '/login'
+    | '/progressions'
     | '/sitemap.xml'
     | '/tunings'
     | '/chord/$slug'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChordsRoute: typeof ChordsRoute
   LoginRoute: typeof LoginRoute
+  ProgressionsRoute: typeof ProgressionsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TuningsRoute: typeof TuningsRoute
   ChordSlugRoute: typeof ChordSlugRoute
@@ -148,6 +161,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/progressions': {
+      id: '/progressions'
+      path: '/progressions'
+      fullPath: '/progressions'
+      preLoaderRoute: typeof ProgressionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChordsRoute: ChordsRoute,
   LoginRoute: LoginRoute,
+  ProgressionsRoute: ProgressionsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TuningsRoute: TuningsRoute,
   ChordSlugRoute: ChordSlugRoute,
