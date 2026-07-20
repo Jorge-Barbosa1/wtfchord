@@ -11,7 +11,6 @@ export const getMyProfile = createServerFn({ method: "GET" })
       .eq("id", userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    // Profile may not exist yet if trigger lagged — return a default
     return (
       data ?? { id: userId, email: null, is_pro: false, pro_activated_at: null }
     );
@@ -20,11 +19,8 @@ export const getMyProfile = createServerFn({ method: "GET" })
 export const claimLegacyPro = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_pro: true, pro_activated_at: new Date().toISOString() })
-      .eq("id", userId);
-    if (error) throw new Error(error.message);
-    return { ok: true };
+    // NOTE: legacy client-side "Pro" flag cannot be trusted as proof of payment.
+    // This endpoint is intentionally a no-op — Pro status is only granted by
+    // the verified Stripe webhook (see src/routes/api/public/stripe-webhook.ts).
+    return { ok: true, claimed: false, userId: context.userId };
   });
