@@ -49,13 +49,13 @@ function Index() {
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [customOpen, setCustomOpen] = useState(false);
 
-  // Handle ?activated=true from Stripe redirect: refresh server-side Pro,
-  // and set local flag as immediate fallback for non-authenticated users.
+  // Handle ?activated=true from Stripe redirect: only refresh server-verified
+  // Pro status. The URL parameter itself never grants access.
   useEffect(() => {
     if (typeof window === "undefined") return;
+    clearLegacyLocalPro();
     const params = new URLSearchParams(window.location.search);
     if (params.get("activated") === "true") {
-      if (!user) setProStatus(true);
       qc.invalidateQueries({ queryKey: ["profile"] });
       params.delete("activated");
       const newSearch = params.toString();
