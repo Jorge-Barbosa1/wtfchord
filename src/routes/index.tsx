@@ -25,7 +25,7 @@ import {
   type StringState,
 } from "@/lib/music/detect";
 import { usePersistedState, type HistoryEntry } from "@/hooks/usePersistedState";
-import { useProStatus, setProStatus } from "@/hooks/useProStatus";
+import { useProStatus, clearLegacyLocalPro } from "@/hooks/useProStatus";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 
