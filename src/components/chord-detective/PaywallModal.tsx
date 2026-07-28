@@ -56,26 +56,18 @@ export function PaywallModal({ open, onClose }: PaywallModalProps) {
         </div>
 
         {!user ? (
-          <>
-            <div className="rounded-2xl border border-border bg-surface-2 p-4 mb-4">
-              <p className="text-xs text-muted mb-3">
-                Sign in first so your Pro is saved to your account and synced across all your devices.
-              </p>
-              <Link
-                to="/login"
-                onClick={onClose}
-                className="w-full bg-foreground text-background h-12 rounded-xl font-extrabold flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors text-sm"
-              >
-                SIGN IN OR CREATE ACCOUNT
-              </Link>
-            </div>
-            <a
-              href={CHECKOUT_URL}
-              className="w-full border border-border text-muted h-12 rounded-2xl font-mono text-xs uppercase tracking-widest flex items-center justify-center hover:border-primary/50 hover:text-foreground transition-colors"
+          <div className="rounded-2xl border border-border bg-surface-2 p-4">
+            <p className="text-xs text-muted mb-3">
+              Sign in first so your Pro unlock is tied to your account and synced across all your devices.
+            </p>
+            <Link
+              to="/login"
+              onClick={onClose}
+              className="w-full bg-foreground text-background h-12 rounded-xl font-extrabold flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors text-sm"
             >
-              Continue without account
-            </a>
-          </>
+              SIGN IN OR CREATE ACCOUNT
+            </Link>
+          </div>
         ) : (
           <a
             href={checkoutHref}
