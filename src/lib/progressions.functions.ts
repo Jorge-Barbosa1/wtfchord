@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import type { ProgressionChord } from "@/lib/progressions";
 
 const chordSchema = z.object({
   id: z.string(),
@@ -38,7 +39,7 @@ export const listRemoteProgressions = createServerFn({ method: "GET" })
       id: r.local_id,
       name: r.name,
       tuningId: r.tuning_id,
-      chords: (r.chords as unknown[]) ?? [],
+      chords: (r.chords as unknown as ProgressionChord[]) ?? [],
       createdAt: new Date(r.created_at as string).getTime(),
       updatedAt: new Date(r.updated_at as string).getTime(),
     }));
@@ -97,7 +98,7 @@ export const syncProgressions = createServerFn({ method: "POST" })
       id: r.local_id as string,
       name: r.name as string,
       tuningId: r.tuning_id as string,
-      chords: (r.chords as unknown[]) ?? [],
+      chords: (r.chords as unknown as ProgressionChord[]) ?? [],
       createdAt: new Date(r.created_at as string).getTime(),
       updatedAt: new Date(r.updated_at as string).getTime(),
     }));
