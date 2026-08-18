@@ -21,6 +21,7 @@ export type Database = {
           id: string
           is_pro: boolean
           pro_activated_at: string | null
+          trial_started_at: string | null
         }
         Insert: {
           created_at?: string
@@ -28,6 +29,7 @@ export type Database = {
           id: string
           is_pro?: boolean
           pro_activated_at?: string | null
+          trial_started_at?: string | null
         }
         Update: {
           created_at?: string
@@ -35,6 +37,40 @@ export type Database = {
           id?: string
           is_pro?: boolean
           pro_activated_at?: string | null
+          trial_started_at?: string | null
+        }
+        Relationships: []
+      }
+      progressions: {
+        Row: {
+          chords: Json
+          created_at: string
+          id: string
+          local_id: string
+          name: string
+          tuning_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chords?: Json
+          created_at?: string
+          id?: string
+          local_id: string
+          name?: string
+          tuning_id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chords?: Json
+          created_at?: string
+          id?: string
+          local_id?: string
+          name?: string
+          tuning_id?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
