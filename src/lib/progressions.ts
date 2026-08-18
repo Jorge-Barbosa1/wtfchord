@@ -57,3 +57,41 @@ export function newProgression(tuningId: string): Progression {
 export function newChordId(): string {
   return `c-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
+
+/* ---------------- Share-by-URL encoding ---------------- */
+
+import { NOTE_NAMES, FLAT_NAMES, noteName } from "@/lib/music/notes";
+import { CHORD_DEFS } from "@/lib/music/chords";
+
+export interface SimpleChord {
+  rootPc: number;
+  suffix: string;
+}
+
+/** "Am-F-C-G" */
+export function encodeProgressionParam(chords: SimpleChord[]): string {
+  return chords.map((c) => `${noteName(c.rootPc)}${c.suffix}`).join("-");
+}
+
+export function parseProgressionParam(raw: string): SimpleChord[] {
+  const out: SimpleChord[] = [];
+  for (const tokenRaw of raw.split("-")) {
+    const token = tokenRaw.trim();
+    if (!token) continue;
+    const m = /^([A-Ga-g])([#b]?)(.*)$/.exec(token);
+    if (!m) continue;
+    const letter = m[1].toUpperCase();
+    const accidental = m[2];
+    const name = letter + accidental;
+    let rootPc = NOTE_NAMES.indexOf(name as (typeof NOTE_NAMES)[number]);
+    if (rootPc < 0) rootPc = FLAT_NAMES.indexOf(name as (typeof FLAT_NAMES)[number]);
+    if (rootPc < 0) continue;
+    const suffix = m[3] ?? "";
+    const def =
+      CHORD_DEFS.find((d) => d.suffix.toLowerCase() === suffix.toLowerCase()) ??
+      (suffix === "" ? CHORD_DEFS[0] : undefined);
+    if (!def) continue;
+    out.push({ rootPc, suffix: def.suffix });
+  }
+  return out;
+}
