@@ -44,8 +44,8 @@ export const Route = createFileRoute("/chord/$slug")({
       };
     }
     const { parsed } = loaderData;
-    const title = `${parsed.displayName} chord — how to play ${parsed.rootName} ${parsed.qualityLabel} on guitar`;
-    const desc = `${parsed.displayName} (${parsed.rootName} ${parsed.qualityLabel}) guitar chord diagrams, notes, intervals, and voicings. Standard tuning.`;
+    const title = `${parsed.displayName} chord on guitar — how to play ${parsed.rootName} ${parsed.qualityLabel} in standard tuning`;
+    const desc = `${parsed.displayName} (${parsed.rootName} ${parsed.qualityLabel}) guitar chord diagrams, notes, intervals, formula and voicings in standard tuning. Common progressions and usage context included.`;
     const url = `${BASE_URL}/chord/${params.slug}`;
     return {
       meta: [
