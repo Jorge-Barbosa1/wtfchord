@@ -68,6 +68,13 @@ function chordDisplayName(rootPc: number, suffix: string): string {
   return `${noteName(rootPc)}${suffix}`;
 }
 
+function voicingAlt(tuning: Tuning, chordName: string, strings: ("mute" | "open" | { fret: number; finger?: number })[]): string {
+  const frets = strings
+    .map((s) => (s === "mute" ? "x" : s === "open" ? "0" : String(s.fret)))
+    .join("-");
+  return `${chordName} fingering on ${tuning.label}: frets ${frets}`;
+}
+
 function ProgressionsPage() {
   const { isPro } = useProStatus();
   const { user } = useAuth();
