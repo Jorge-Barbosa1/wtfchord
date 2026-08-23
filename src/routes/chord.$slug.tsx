@@ -213,6 +213,7 @@ function ChordPage() {
                       strings={v.strings}
                       minFret={v.minFret}
                       maxFret={v.maxFret}
+                      alt={voicingAlt(i, v.strings)}
                     />
                   </div>
                 </div>
