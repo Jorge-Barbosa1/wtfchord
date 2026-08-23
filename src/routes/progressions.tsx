@@ -426,6 +426,23 @@ function ProgressionsPage() {
             <span className="text-[10px] font-mono text-muted">
               {current.chords.length} chord{current.chords.length === 1 ? "" : "s"}
             </span>
+            <span className="mx-1 h-3 w-px bg-border" />
+            {user && isPro ? (
+              <span className="text-[10px] font-mono text-muted">
+                {syncing ? "Syncing…" : "Synced to account"}
+              </span>
+            ) : (
+              <button
+                onClick={() => setPaywallOpen(true)}
+                className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted hover:text-foreground"
+                title="Upgrade to Pro to sync progressions across devices"
+              >
+                <span className="px-1 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
+                  Pro
+                </span>
+                Sync across devices
+              </button>
+            )}
           </div>
         </section>
 
