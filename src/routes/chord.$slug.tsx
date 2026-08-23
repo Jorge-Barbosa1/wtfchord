@@ -109,6 +109,13 @@ function ChordPage() {
   };
   const { parsed, voicings, notes } = loaderData;
 
+  const theory = {
+    formula: FORMULAS[parsed.quality] ?? null,
+    character: CHARACTER[parsed.quality] ?? null,
+    usage: USAGE[parsed.quality] ?? null,
+    progressions: commonProgressions(parsed.rootPc, parsed.quality),
+  };
+
 
 
   return (
