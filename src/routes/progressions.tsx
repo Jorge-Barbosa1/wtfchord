@@ -389,6 +389,13 @@ function ProgressionsPage() {
             New
           </button>
           <button
+            onClick={handleShare}
+            disabled={current.chords.length === 0}
+            className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-muted hover:text-foreground px-2 py-1 disabled:opacity-30"
+          >
+            {shareCopied ? "Copied" : "Share"}
+          </button>
+          <button
             onClick={handleSave}
             disabled={current.chords.length === 0}
             className="text-[10px] sm:text-xs font-mono uppercase tracking-widest bg-foreground text-background px-3 py-1.5 rounded-full disabled:opacity-30 hover:bg-primary hover:text-primary-foreground transition-colors"
