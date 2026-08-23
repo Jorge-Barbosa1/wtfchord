@@ -1,6 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CHORD_DEFS } from "@/lib/music/chords";
+import type { StringState } from "@/lib/music/detect";
 import { noteName } from "@/lib/music/notes";
 import { findVoicings, type Voicing } from "@/lib/music/voicings";
 import {
@@ -18,14 +20,27 @@ import {
   saveProgressions,
   newProgression,
   newChordId,
+  encodeProgressionParam,
+  parseProgressionParam,
   type Progression,
   type ProgressionChord,
+  type SimpleChord,
 } from "@/lib/progressions";
+import {
+  listRemoteProgressions,
+  syncProgressions,
+} from "@/lib/progressions.functions";
+import { suggestNextChords, keyLabel, type Suggestion } from "@/lib/music/theory";
+import { useAuth } from "@/hooks/useAuth";
 import { useProStatus } from "@/hooks/useProStatus";
 import { PaywallModal } from "@/components/chord-detective/PaywallModal";
 
 export const Route = createFileRoute("/progressions")({
   component: ProgressionsPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    progression: typeof search.progression === "string" ? search.progression : undefined,
+    tuning: typeof search.tuning === "string" ? search.tuning : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Chord Progression Builder — WTFChord" },
@@ -54,9 +69,23 @@ function chordDisplayName(rootPc: number, suffix: string): string {
   return `${noteName(rootPc)}${suffix}`;
 }
 
+function voicingAlt(tuning: Tuning, chordName: string, strings: StringState[]): string {
+  const frets = strings
+    .map((s) => (s === "mute" ? "x" : s === "open" ? "0" : String(s.fret)))
+    .join("-");
+  return `${chordName} fingering on ${tuning.label}: frets ${frets}`;
+}
+
 function ProgressionsPage() {
   const { isPro } = useProStatus();
+  const { user } = useAuth();
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: "/progressions" });
+  const fetchRemote = useServerFn(listRemoteProgressions);
+  const pushRemote = useServerFn(syncProgressions);
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const [leftHanded] = usePersistedState<boolean>("cd.left", false);
   const [customStrings] = usePersistedState<
     { note: string; octave: number }[] | null
@@ -79,9 +108,50 @@ function ProgressionsPage() {
   const [focusIdx, setFocusIdx] = useState<number>(0);
   const [addOpen, setAddOpen] = useState(false);
 
+  // Build a chord from a simple root+suffix using the given tuning
+  const buildChord = (simple: SimpleChord, tuningId: string): ProgressionChord => {
+    const tuning =
+      tuningId === CUSTOM_TUNING_ID
+        ? makeCustomTuning(customStrings ?? DEFAULT_CUSTOM_STRINGS)
+        : TUNINGS.find((t) => t.id === tuningId) ?? DEFAULT_TUNING;
+    const def = CHORD_DEFS.find((d) => d.suffix === simple.suffix) ?? CHORD_DEFS[0];
+    const voicings = findVoicings(tuning, simple.rootPc, def.intervals, {
+      limit: 1,
+      maxFret: 12,
+    });
+    const v = voicings[0];
+    return {
+      id: newChordId(),
+      rootPc: simple.rootPc,
+      suffix: simple.suffix,
+      tuningId,
+      strings: v ? v.strings : tuning.strings.map(() => "mute" as const),
+      minFret: v?.minFret ?? 0,
+      maxFret: v?.maxFret ?? 0,
+    };
+  };
+
   // Load on mount
   useEffect(() => {
     setAll(loadProgressions());
+  }, []);
+
+  // Import from shared URL
+  useEffect(() => {
+    const { progression, tuning } = search;
+    if (!progression) return;
+    const parsed = parseProgressionParam(progression);
+    if (parsed.length === 0) return;
+    const tuningId =
+      tuning && TUNINGS.some((t) => t.id === tuning) ? tuning : current.tuningId;
+    const imported: Progression = {
+      ...newProgression(tuningId),
+      name: "Shared progression",
+      chords: parsed.map((c) => buildChord(c, tuningId)),
+    };
+    setCurrent(imported);
+    setFocusIdx(0);
+    navigate({ to: "/progressions", search: {} });
   }, []);
 
   // Sync from other tabs
@@ -94,6 +164,48 @@ function ProgressionsPage() {
       window.removeEventListener("cd.progressions.changed", sync);
     };
   }, []);
+
+  // Cloud sync for Pro users: merge local and remote, push newer local copies
+  useEffect(() => {
+    if (!user || !isPro) return;
+    let cancelled = false;
+    setSyncing(true);
+    fetchRemote()
+      .then((remote) => {
+        if (cancelled) return;
+        const local = loadProgressions();
+        const localMap = new Map(local.map((p) => [p.id, p]));
+        const remoteMap = new Map(remote.map((r) => [r.id, r]));
+        const allIds = new Set([...localMap.keys(), ...remoteMap.keys()]);
+        const merged = [...allIds].map((id) => {
+          const l = localMap.get(id);
+          const r = remoteMap.get(id);
+          if (!l) return r!;
+          if (!r) return l;
+          return (r.updatedAt ?? 0) > (l.updatedAt ?? 0) ? r : l;
+        });
+        const toPush = merged.filter((p) => {
+          const r = remoteMap.get(p.id);
+          return !r || (p.updatedAt ?? 0) > (r.updatedAt ?? 0);
+        });
+        if (toPush.length > 0) {
+          return pushRemote({ data: { progressions: toPush } }).then(() => merged);
+        }
+        return merged;
+      })
+      .then((merged) => {
+        if (cancelled || !merged) return;
+        setAll(merged);
+        saveProgressions(merged);
+      })
+      .catch((err) => console.error("Progression sync failed", err))
+      .finally(() => {
+        if (!cancelled) setSyncing(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, isPro]);
 
   const currentTuning = useMemo<Tuning>(() => {
     if (current.tuningId === CUSTOM_TUNING_ID) {
@@ -232,6 +344,26 @@ function ProgressionsPage() {
     setFocusIdx(0);
   };
 
+  const handleShare = () => {
+    const simple: SimpleChord[] = current.chords.map((c) => ({
+      rootPc: c.rootPc,
+      suffix: c.suffix,
+    }));
+    const encoded = encodeProgressionParam(simple);
+    const url = `${window.location.origin}/progressions?progression=${encodeURIComponent(encoded)}&tuning=${encodeURIComponent(current.tuningId)}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    });
+  };
+
+  const suggestions: Suggestion[] = useMemo(() => {
+    return suggestNextChords(
+      current.chords.map((c) => ({ rootPc: c.rootPc, suffix: c.suffix })),
+      5,
+    );
+  }, [current.chords]);
+
   const setTuningForCurrent = (id: string) => {
     const t = TUNINGS.find((tt) => tt.id === id);
     if (!t) return;
@@ -265,6 +397,13 @@ function ProgressionsPage() {
             New
           </button>
           <button
+            onClick={handleShare}
+            disabled={current.chords.length === 0}
+            className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-muted hover:text-foreground px-2 py-1 disabled:opacity-30"
+          >
+            {shareCopied ? "Copied" : "Share"}
+          </button>
+          <button
             onClick={handleSave}
             disabled={current.chords.length === 0}
             className="text-[10px] sm:text-xs font-mono uppercase tracking-widest bg-foreground text-background px-3 py-1.5 rounded-full disabled:opacity-30 hover:bg-primary hover:text-primary-foreground transition-colors"
@@ -295,6 +434,23 @@ function ProgressionsPage() {
             <span className="text-[10px] font-mono text-muted">
               {current.chords.length} chord{current.chords.length === 1 ? "" : "s"}
             </span>
+            <span className="mx-1 h-3 w-px bg-border" />
+            {user && isPro ? (
+              <span className="text-[10px] font-mono text-muted">
+                {syncing ? "Syncing…" : "Synced to account"}
+              </span>
+            ) : (
+              <button
+                onClick={() => setPaywallOpen(true)}
+                className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted hover:text-foreground"
+                title="Upgrade to Pro to sync progressions across devices"
+              >
+                <span className="px-1 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
+                  Pro
+                </span>
+                Sync across devices
+              </button>
+            )}
           </div>
         </section>
 
@@ -389,6 +545,7 @@ function ProgressionsPage() {
                     minFret={focused.minFret}
                     maxFret={focused.maxFret}
                     leftHanded={leftHanded}
+                    alt={voicingAlt(currentTuning, chordDisplayName(focused.rootPc, focused.suffix), focused.strings)}
                   />
                 </div>
               </div>
@@ -444,6 +601,7 @@ function ProgressionsPage() {
                             minFret={v.minFret}
                             maxFret={v.maxFret}
                             leftHanded={leftHanded}
+                            alt={voicingAlt(currentTuning, chordDisplayName(focused.rootPc, focused.suffix), v.strings)}
                           />
                         </div>
                         <div className="text-[9px] font-mono text-muted text-center mt-2">
@@ -452,6 +610,28 @@ function ProgressionsPage() {
                       </button>
                     );
                   })}
+                </div>
+              </div>
+            )}
+
+            {/* Next chord suggestions */}
+            {suggestions.length > 0 && (
+              <div className="mt-8">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted mb-3">
+                  What comes next?
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {suggestions.map((s) => (
+                    <button
+                      key={`${s.rootPc}-${s.suffix}`}
+                      onClick={() => handleAddChord(s.rootPc, s.suffix)}
+                      className="px-3 py-2 rounded-2xl border border-border bg-surface hover:border-primary/50 text-left transition-colors"
+                      title={s.reason}
+                    >
+                      <div className="font-bold text-sm">{s.name}</div>
+                      <div className="text-[9px] font-mono text-muted">{s.reason}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
             )}

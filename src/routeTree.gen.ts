@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TuningsRouteImport } from './routes/tunings'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ProgressionsRouteImport } from './routes/progressions'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ChordsRouteImport } from './routes/chords'
 import { Route as IndexRouteImport } from './routes/index'
@@ -32,6 +33,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ProgressionsRoute = ProgressionsRouteImport.update({
   id: '/progressions',
   path: '/progressions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chords': typeof ChordsRoute
   '/login': typeof LoginRoute
+  '/pricing': typeof PricingRoute
   '/progressions': typeof ProgressionsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tunings': typeof TuningsRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chords': typeof ChordsRoute
   '/login': typeof LoginRoute
+  '/pricing': typeof PricingRoute
   '/progressions': typeof ProgressionsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tunings': typeof TuningsRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/chords': typeof ChordsRoute
   '/login': typeof LoginRoute
+  '/pricing': typeof PricingRoute
   '/progressions': typeof ProgressionsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tunings': typeof TuningsRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/chords'
     | '/login'
+    | '/pricing'
     | '/progressions'
     | '/sitemap.xml'
     | '/tunings'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/'
     | '/chords'
     | '/login'
+    | '/pricing'
     | '/progressions'
     | '/sitemap.xml'
     | '/tunings'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/chords'
     | '/login'
+    | '/pricing'
     | '/progressions'
     | '/sitemap.xml'
     | '/tunings'
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChordsRoute: typeof ChordsRoute
   LoginRoute: typeof LoginRoute
+  PricingRoute: typeof PricingRoute
   ProgressionsRoute: typeof ProgressionsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TuningsRoute: typeof TuningsRoute
@@ -168,6 +181,13 @@ declare module '@tanstack/react-router' {
       path: '/progressions'
       fullPath: '/progressions'
       preLoaderRoute: typeof ProgressionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -219,6 +239,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChordsRoute: ChordsRoute,
   LoginRoute: LoginRoute,
+  PricingRoute: PricingRoute,
   ProgressionsRoute: ProgressionsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TuningsRoute: TuningsRoute,
