@@ -128,6 +128,24 @@ function ProgressionsPage() {
     setAll(loadProgressions());
   }, []);
 
+  // Import from shared URL
+  useEffect(() => {
+    const { progression, tuning } = search;
+    if (!progression) return;
+    const parsed = parseProgressionParam(progression);
+    if (parsed.length === 0) return;
+    const tuningId =
+      tuning && TUNINGS.some((t) => t.id === tuning) ? tuning : current.tuningId;
+    const imported: Progression = {
+      ...newProgression(tuningId),
+      name: "Shared progression",
+      chords: parsed.map((c) => buildChord(c, tuningId)),
+    };
+    setCurrent(imported);
+    setFocusIdx(0);
+    navigate({ to: "/progressions", search: {} });
+  }, []);
+
   // Sync from other tabs
   useEffect(() => {
     const sync = () => setAll(loadProgressions());
@@ -138,6 +156,48 @@ function ProgressionsPage() {
       window.removeEventListener("cd.progressions.changed", sync);
     };
   }, []);
+
+  // Cloud sync for Pro users: merge local and remote, push newer local copies
+  useEffect(() => {
+    if (!user || !isPro) return;
+    let cancelled = false;
+    setSyncing(true);
+    fetchRemote()
+      .then((remote) => {
+        if (cancelled) return;
+        const local = loadProgressions();
+        const localMap = new Map(local.map((p) => [p.id, p]));
+        const remoteMap = new Map(remote.map((r) => [r.id, r]));
+        const allIds = new Set([...localMap.keys(), ...remoteMap.keys()]);
+        const merged = [...allIds].map((id) => {
+          const l = localMap.get(id);
+          const r = remoteMap.get(id);
+          if (!l) return r!;
+          if (!r) return l;
+          return (r.updatedAt ?? 0) > (l.updatedAt ?? 0) ? r : l;
+        });
+        const toPush = merged.filter((p) => {
+          const r = remoteMap.get(p.id);
+          return !r || (p.updatedAt ?? 0) > (r.updatedAt ?? 0);
+        });
+        if (toPush.length > 0) {
+          return pushRemote({ data: { progressions: toPush } }).then(() => merged);
+        }
+        return merged;
+      })
+      .then((merged) => {
+        if (cancelled || !merged) return;
+        setAll(merged);
+        saveProgressions(merged);
+      })
+      .catch((err) => console.error("Progression sync failed", err))
+      .finally(() => {
+        if (!cancelled) setSyncing(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, isPro]);
 
   const currentTuning = useMemo<Tuning>(() => {
     if (current.tuningId === CUSTOM_TUNING_ID) {
