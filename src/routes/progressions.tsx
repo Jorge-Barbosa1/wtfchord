@@ -69,7 +69,7 @@ function chordDisplayName(rootPc: number, suffix: string): string {
   return `${noteName(rootPc)}${suffix}`;
 }
 
-function voicingAlt(tuning: Tuning, chordName: string, strings: ("mute" | "open" | { fret: number; finger?: number })[]): string {
+function voicingAlt(tuning: Tuning, chordName: string, strings: StringState[]): string {
   const frets = strings
     .map((s) => (s === "mute" ? "x" : s === "open" ? "0" : String(s.fret)))
     .join("-");
