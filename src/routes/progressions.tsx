@@ -612,6 +612,28 @@ function ProgressionsPage() {
                 </div>
               </div>
             )}
+
+            {/* Next chord suggestions */}
+            {suggestions.length > 0 && (
+              <div className="mt-8">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted mb-3">
+                  What comes next?
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {suggestions.map((s) => (
+                    <button
+                      key={`${s.rootPc}-${s.suffix}`}
+                      onClick={() => handleAddChord(s.rootPc, s.suffix)}
+                      className="px-3 py-2 rounded-2xl border border-border bg-surface hover:border-primary/50 text-left transition-colors"
+                      title={s.reason}
+                    >
+                      <div className="font-bold text-sm">{s.name}</div>
+                      <div className="text-[9px] font-mono text-muted">{s.reason}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
         )}
 
