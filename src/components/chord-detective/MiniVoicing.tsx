@@ -21,6 +21,7 @@ export function MiniVoicing({
   minFret,
   maxFret,
   leftHanded = false,
+  alt,
 }: MiniVoicingProps) {
   const N = tuning.strings.length;
   const indices = leftHanded
