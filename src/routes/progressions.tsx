@@ -2,6 +2,7 @@ import { createFileRoute, Link, useSearch, useNavigate } from "@tanstack/react-r
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CHORD_DEFS } from "@/lib/music/chords";
+import type { StringState } from "@/lib/music/detect";
 import { noteName } from "@/lib/music/notes";
 import { findVoicings, type Voicing } from "@/lib/music/voicings";
 import {
