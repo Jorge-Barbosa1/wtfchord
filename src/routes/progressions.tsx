@@ -70,7 +70,14 @@ function chordDisplayName(rootPc: number, suffix: string): string {
 
 function ProgressionsPage() {
   const { isPro } = useProStatus();
+  const { user } = useAuth();
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: "/progressions" });
+  const fetchRemote = useServerFn(listRemoteProgressions);
+  const pushRemote = useServerFn(syncProgressions);
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const [leftHanded] = usePersistedState<boolean>("cd.left", false);
   const [customStrings] = usePersistedState<
     { note: string; octave: number }[] | null
@@ -92,6 +99,29 @@ function ProgressionsPage() {
   const [current, setCurrent] = useState<Progression>(() => newProgression(initialTuning.id));
   const [focusIdx, setFocusIdx] = useState<number>(0);
   const [addOpen, setAddOpen] = useState(false);
+
+  // Build a chord from a simple root+suffix using the given tuning
+  const buildChord = (simple: SimpleChord, tuningId: string): ProgressionChord => {
+    const tuning =
+      tuningId === CUSTOM_TUNING_ID
+        ? makeCustomTuning(customStrings ?? DEFAULT_CUSTOM_STRINGS)
+        : TUNINGS.find((t) => t.id === tuningId) ?? DEFAULT_TUNING;
+    const def = CHORD_DEFS.find((d) => d.suffix === simple.suffix) ?? CHORD_DEFS[0];
+    const voicings = findVoicings(tuning, simple.rootPc, def.intervals, {
+      limit: 1,
+      maxFret: 12,
+    });
+    const v = voicings[0];
+    return {
+      id: newChordId(),
+      rootPc: simple.rootPc,
+      suffix: simple.suffix,
+      tuningId,
+      strings: v ? v.strings : tuning.strings.map(() => "mute" as const),
+      minFret: v?.minFret ?? 0,
+      maxFret: v?.maxFret ?? 0,
+    };
+  };
 
   // Load on mount
   useEffect(() => {
