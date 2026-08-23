@@ -11,6 +11,13 @@ import {
   ROOT_LABELS,
   chordSlug,
 } from "@/lib/music/slug";
+import {
+  FORMULAS,
+  CHARACTER,
+  USAGE,
+  commonProgressions,
+  keyLabel,
+} from "@/lib/music/theory";
 import { MiniVoicing } from "@/components/chord-detective/MiniVoicing";
 
 const BASE_URL = "https://wtfchord.lovable.app";
