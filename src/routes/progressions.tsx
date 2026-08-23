@@ -336,6 +336,26 @@ function ProgressionsPage() {
     setFocusIdx(0);
   };
 
+  const handleShare = () => {
+    const simple: SimpleChord[] = current.chords.map((c) => ({
+      rootPc: c.rootPc,
+      suffix: c.suffix,
+    }));
+    const encoded = encodeProgressionParam(simple);
+    const url = `${window.location.origin}/progressions?progression=${encodeURIComponent(encoded)}&tuning=${encodeURIComponent(current.tuningId)}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    });
+  };
+
+  const suggestions: Suggestion[] = useMemo(() => {
+    return suggestNextChords(
+      current.chords.map((c) => ({ rootPc: c.rootPc, suffix: c.suffix })),
+      5,
+    );
+  }, [current.chords]);
+
   const setTuningForCurrent = (id: string) => {
     const t = TUNINGS.find((tt) => tt.id === id);
     if (!t) return;
