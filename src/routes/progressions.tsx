@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CHORD_DEFS } from "@/lib/music/chords";
 import { noteName } from "@/lib/music/notes";
@@ -18,9 +19,18 @@ import {
   saveProgressions,
   newProgression,
   newChordId,
+  encodeProgressionParam,
+  parseProgressionParam,
   type Progression,
   type ProgressionChord,
+  type SimpleChord,
 } from "@/lib/progressions";
+import {
+  listRemoteProgressions,
+  syncProgressions,
+} from "@/lib/progressions.functions";
+import { suggestNextChords, keyLabel, type Suggestion } from "@/lib/music/theory";
+import { useAuth } from "@/hooks/useAuth";
 import { useProStatus } from "@/hooks/useProStatus";
 import { PaywallModal } from "@/components/chord-detective/PaywallModal";
 
