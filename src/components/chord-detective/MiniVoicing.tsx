@@ -38,7 +38,7 @@ export function MiniVoicing({
   while (frets.length < 5) frets.push(frets[frets.length - 1] + 1);
 
   return (
-    <div className="inline-flex flex-col items-stretch gap-1">
+    <div className="inline-flex flex-col items-stretch gap-1" aria-label={alt} role="img">
       {/* Open / Mute row */}
       <div
         className="grid"
