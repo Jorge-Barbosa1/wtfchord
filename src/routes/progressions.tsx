@@ -600,6 +600,7 @@ function ProgressionsPage() {
                             minFret={v.minFret}
                             maxFret={v.maxFret}
                             leftHanded={leftHanded}
+                            alt={voicingAlt(currentTuning, chordDisplayName(focused.rootPc, focused.suffix), v.strings)}
                           />
                         </div>
                         <div className="text-[9px] font-mono text-muted text-center mt-2">
