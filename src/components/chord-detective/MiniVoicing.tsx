@@ -7,6 +7,7 @@ interface MiniVoicingProps {
   minFret: number;
   maxFret: number;
   leftHanded?: boolean;
+  alt?: string;
 }
 
 /**
