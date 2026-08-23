@@ -36,6 +36,10 @@ import { PaywallModal } from "@/components/chord-detective/PaywallModal";
 
 export const Route = createFileRoute("/progressions")({
   component: ProgressionsPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    progression: typeof search.progression === "string" ? search.progression : undefined,
+    tuning: typeof search.tuning === "string" ? search.tuning : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Chord Progression Builder — WTFChord" },
