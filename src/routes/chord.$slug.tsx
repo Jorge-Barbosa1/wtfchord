@@ -230,6 +230,67 @@ function ChordPage() {
           </div>
         </section>
 
+        {/* Theory content */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-extrabold tracking-tighter mb-4">
+            About {parsed.displayName}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {theory.formula && (
+              <div className="p-5 rounded-2xl bg-surface border border-border">
+                <p className="text-[10px] font-mono text-muted uppercase mb-2">Interval formula</p>
+                <p className="text-lg font-bold">{theory.formula}</p>
+              </div>
+            )}
+            {theory.character && (
+              <div className="p-5 rounded-2xl bg-surface border border-border">
+                <p className="text-[10px] font-mono text-muted uppercase mb-2">Sound character</p>
+                <p className="text-sm text-muted">{theory.character}</p>
+              </div>
+            )}
+            {theory.usage && (
+              <div className="p-5 rounded-2xl bg-surface border border-border md:col-span-2">
+                <p className="text-[10px] font-mono text-muted uppercase mb-2">Where it appears</p>
+                <p className="text-sm text-muted">{theory.usage}</p>
+              </div>
+            )}
+          </div>
+
+          {theory.progressions.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-lg font-extrabold tracking-tight mb-3">
+                Common progressions using {parsed.displayName}
+              </h3>
+              <div className="space-y-3">
+                {theory.progressions.map((prog, i) => (
+                  <div key={i} className="p-4 rounded-2xl bg-surface border border-border">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      {prog.chords.map((c, j) => (
+                        <span key={j}>
+                          <Link
+                            to="/chord/$slug"
+                            params={{ slug: chordSlug(noteName(c.rootPc), c.suffix) }}
+                            className="text-sm font-bold text-primary hover:underline"
+                          >
+                            {noteName(c.rootPc)}{c.suffix}
+                          </Link>
+                          {j < prog.chords.length - 1 && (
+                            <span className="text-muted mx-1">→</span>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted">{prog.description}</p>
+                    <p className="text-[10px] font-mono text-muted mt-1">
+                      Key: {keyLabel(prog.key)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+
         <section className="mb-12">
           <h2 className="text-2xl font-extrabold tracking-tighter mb-4">
             Other {parsed.rootName} chords
