@@ -1,97 +1,100 @@
-# WTFChord — Roadmap de melhorias
+# WTFChord — Finish the three-front upgrade
 
-O bounce rate a 100% + a landing atual (que abre diretamente no fretboard sem contexto) são o problema #1. A maior parte do plano ataca isso: dar razão para ficar, criar páginas indexáveis, e polir o resto.
+## Current state (verified from the codebase)
 
----
+**1. SEO on `/chord/$slug`**
+- `src/lib/music/theory.ts` is already written: formulas, character/usage copy, diatonic chords, key detection, common progressions.
+- `src/routes/chord.$slug.tsx` already has dynamic `head()` (title, description, OG, canonical, JSON-LD HowTo).
+- `src/routes/sitemap[.]xml.ts` already lists every `/chord/$slug` and `/tuning/$id`.
+- **Missing**: the theory content is not rendered on the chord page itself; the H1 does not mention the instrument; `MiniVoicing` diagrams have no `alt` text.
 
-## Fase 1 — Reduzir bounce & primeiro impacto (semana 1)
+**2. Progressions retention**
+- `src/lib/progressions.ts` already has localStorage load/save and `encodeProgressionParam`/`parseProgressionParam` for URL sharing.
+- `src/lib/progressions.functions.ts` already has authenticated server functions (`listRemoteProgressions`, `syncProgressions`, `deleteRemoteProgression`) with a merge strategy.
+- The `progressions` table exists with RLS and grants.
+- **Missing**: the UI never calls the sync functions, never reads `?progression=` from the URL, and never shows `suggestNextChords()`.
 
-Objetivo: dar a um visitante que caiu no site 5 segundos de "ok, isto é útil e vou tentar".
+**3. Pro clarity**
+- `profiles.trial_started_at` exists and is protected by the privilege-escalation trigger.
+- `useProStatus` does **not** yet read `trial_started_at`.
+- **Missing**: `/pricing` page, "Upgrade to Pro" header CTA, visible-but-locked Pro badges with tooltips, and trial messaging in the paywall.
 
-1. **Hero section acima do fretboard** (na `/`)
-  - H1 curto ("What chord is this?"), subheading a explicar em 1 frase
-  - 3 badges com prova: "6 tunings", "1200+ chords", "No signup needed"
-  - Micro-demo: fretboard já com um Am pré-preenchido + botão "Try identifying this" que dispara animação → resultado. Mostra o valor sem exigir input.
-2. **Onboarding contextual** — primeira visita mostra 2 tooltips (tap fret / press identify) que auto-dismissam. Guardado em localStorage.
-3. **Estado vazio do painel de resultados** com CTA claro em vez de só "Awaiting input" (adicionar "Or try a preset →" com 4 acordes rápidos: C, G, Dm, F#dim).
-4. **Corrigir "Informations" → "Guide"** e rename "History" → "Recent".
-5. **Social proof rodapé**: contador de acordes identificados (server-side, incrementado no `onIdentify`, cache 5min).
-
-## Fase 2 — SEO real (semana 1-2)
-
-O site tem só uma rota indexável. Isso mata o SEO — Google não tem nada para rankear.
-
-1. **Chord library route dinâmica** — `/chord/$name` (ex: `/chord/c-major`, `/chord/f-sharp-minor-7`). Gera ~200 páginas cobrindo os acordes mais procurados, cada uma com:
-  - Voicings múltiplos (já temos o motor em `voicings.ts`)
-  - Notas, intervalos, inversões
-  - Head `<title>`, `<description>`, `og:image` gerado server-side com o diagrama
-  - JSON-LD `MusicComposition`
-  - Sitemap dinâmico (já existe `sitemap[.]xml.ts` — expandir)
-2. **Tuning pages** — `/tuning/$id` (standard, drop-d, dadgad, open-g, ukulele, cavaquinho). Cada uma explica a afinação + lista dos 20 acordes mais comuns nessa afinação com link para `/chord/...`.
-3. **Landing pages de intenção**:
-  - `/guitar-chord-finder` (keyword principal)
-  - `/ukulele-chord-finder`
-  - `/reverse-chord-lookup`
-   Cada uma com H1 dedicado, copy diferente, e embed do fretboard.
-4. **Blog em `/blog/$slug**` — 5 posts iniciais escritos manualmente ("How to read chord diagrams", "DADGAD tuning guide", etc.). Não geramos — só a infra do route + MDX.
-5. `**robots.txt` + sitemap** — verificar que sitemap inclui todas as rotas novas.
-6. **Meta description mais forte na `/**` (a atual funciona mas é longa).
-
-## Fase 3 — Performance (dias)
-
-Lighthouse já dá 99, mas há coisas concretas a limpar:
-
-1. **Google Fonts render-blocking (economia estimada 290ms)** — mover Inter e JetBrains Mono para self-hosted via `vite-imagetools`/`@fontsource`, com `font-display: swap` e preload da variante 700 (usada no H1). Remove os 2 requests externos críticos.
-2. **Reduce unused JS (98KB)** — code-split `FindChordSheet`, `HistorySheet`, `InfoSheet`, `CustomTuningSheet`, `PaywallModal` com `lazy()` + `Suspense`. Não são precisos no primeiro paint.
-3. **Cache headers** — o worker do `/~flock.js` (7KB) e alguns assets têm TTL curto. Ver se conseguimos aumentar via `wrangler.jsonc` para assets hasheados (1 ano).
-4. **Preload do LCP** — o H1 é o LCP; garantir que a font weight 800 preload está no `head` da `/`.
-
-## Fase 4 — Features musicais que retêm (semana 2-3)
-
-Estas transformam o site de "one-shot lookup" em ferramenta que se volta.
-
-1. **Áudio dos acordes** — Web Audio API (sem samples, síntese aditiva simples com envelope) para "play chord" ao lado do resultado. Zero KB de assets, funciona offline.
-2. **Shareable chord URLs** — `/?tuning=eadgbe&frets=x,3,2,0,1,0` (ou `/chord/c-major`). Botão "Share" copia URL. Dá viral loop.
-3. **Export como imagem** — canvas → PNG do diagrama, com watermark WTFChord. Grande no Instagram/TikTok de professores.
-4. **Progression builder** — segunda tab: adicionar múltiplos acordes em sequência, ver progressão. Precisa Pro (feature nova para o paywall).
-5. **Scale-to-chord** — dado uma escala, sugerir acordes que encaixam.
-
-## Fase 5 — Backend & Pro (semana 2)
-
-1. **Página de conta `/account**` (rota `_authenticated`):
-  - Estado Pro + data ativação
-  - Histórico de acordes sincronizado (mover de localStorage para Postgres com RLS)
-  - Favoritos sincronizados idem
-  - Botão "Delete account" (GDPR)
-2. **Sync de histórico/favoritos server-side** — tabela `user_history`, RLS `user_id = auth.uid()`. Fallback local mantido.
-3. **Analytics de funil** — Plausible ou PostHog. Eventos: `chord_identified`, `paywall_shown`, `checkout_clicked`, `pro_activated`. Sem isto não sabemos o que optimizar.
-
-## Fase 6 — UX polish (paralelo)
-
-- **Empty state animado** no fretboard antes do primeiro tap
-- **Keyboard shortcuts overlay** (`?` mostra atalhos)
-- **Undo/redo** no fretboard (Cmd+Z)
-- **Dark/light toggle no topbar** em vez de escondido em settings
-- **Mobile: bottom sheet para tuning** em vez de dropdown pequeno
-- **Acessibilidade**: `aria-label` nas frets ("String 3, fret 2, D natural"), focus rings visíveis, contrast do `text-muted` no light mode
+The user wants to **finish the upgrade**, with **Progressions sync & URL sharing first**, and **skip the Stripe trial** for now.
 
 ---
 
-## Priorização recomendada
+## Implementation plan
 
-Se só pudéssemos fazer um sprint de 1 semana, faria por esta ordem (impacto em bounce):
+### Phase 1 — Progressions sync & URL sharing (ship first)
 
-1. Hero + micro-demo pré-preenchido (Fase 1.1, 1.2)
-2. Chord library dinâmica + sitemap (Fase 2.1, 2.5) — trás tráfego novo
-3. Shareable URLs + play áudio (Fase 4.1, 4.2) — dá razão para partilhar
-4. Code-split modais + self-host fonts (Fase 3.1, 3.2)
-5. Analytics (Fase 5.6) — para medir tudo o resto
+1. **Account sync on login**
+   - In `src/routes/progressions.tsx`, add a `useEffect` that runs when `user` becomes available.
+   - Call `listRemoteProgressions()`; merge with local `loadProgressions()` using the same rule as the server (newer `updatedAt` wins).
+   - Push the merged list up with `syncProgressions()`, then save the merged result to localStorage.
+   - Keep localStorage as the single source of truth for the UI; the server is just a backup/sync target.
 
-## Nota técnica
+2. **Share by URL**
+   - Add a "Share" button in the progression editor that copies a URL like `/progressions?progression=Am-F-C-G&tuning=standard`.
+   - On mount, read `progression` and `tuning` search params, parse with `parseProgressionParam`, and populate a new progression (auto-pick the first voicing for each chord via `findVoicings`).
+   - If the user is logged in, offer to save the imported progression after they edit it.
 
-- Todas as páginas novas usam `head()` per-route com meta/og únicos (rule do stack).
-- `og:image` dinâmico por acorde/tuning vai precisar de um server route (`/api/og/chord/$name`) que gera PNG — usar `satori` ou renderizar canvas. Alternativa mais simples: pre-gerar em build time e servir estático.
-- Sync de histórico precisa migração + RLS + GRANTs (padrão do projeto).
-- Novo bucket de storage não é preciso — tudo texto/JSON.
+3. **Next-chord suggestions**
+   - After each chord is added, render a "What comes next?" row using `suggestNextChords(current.chords)`.
+   - Tapping a suggestion adds that chord with its first available voicing.
 
-Diz-me qual das fases queres que ataque primeiro (ou se preferes um subset customizado) e faço um plano de implementação detalhado dessa fase.
+4. **Accessibility**
+   - Add descriptive `alt` text to every `MiniVoicing` in the progression page (e.g. "Fingering for C major, frets 0-3-2-0-1-0").
+
+### Phase 2 — SEO chord pages
+
+1. **Render theory content on `/chord/$slug`**
+   - Import `FORMULAS`, `CHARACTER`, `USAGE`, and `commonProgressions` from `src/lib/music/theory.ts`.
+   - Add sections below the voicings grid:
+     - "Formula" (scale degrees).
+     - "Sound and character" (1-2 sentences).
+     - "Where it appears" (1-2 sentences).
+     - "Common progressions" (2-3 cards with chord chips linking to their `/chord/$slug`).
+   - Keep the existing H1 but add the instrument to the title/meta only: e.g. title becomes "C major guitar chord — notes, voicings and progressions — WTFChord".
+
+2. **Alt text on diagrams**
+   - Pass an `alt` prop to `MiniVoicing` on the chord page describing the tuning and fret positions.
+
+3. **Verify sitemap/canonical**
+   - Confirm `/sitemap.xml` and canonical links are unchanged and correct (they already are).
+
+### Phase 3 — Pro clarity
+
+1. **Create `/pricing`**
+   - New route `src/routes/pricing.tsx` with:
+     - Free vs Pro comparison table.
+     - Pro features: ukulele, cavaquinho, mandolin, custom tuning, progression sync across devices, shareable URLs.
+     - "Unlock Pro" button that links to `/login` (if anonymous) or Stripe checkout (if signed in), reusing `PaywallModal` logic.
+
+2. **Header CTA**
+   - Add an unobtrusive "Upgrade" pill in `Topbar.tsx` (desktop and mobile menu) that opens the paywall.
+   - Hide it when the user is already Pro.
+
+3. **Visible-but-locked Pro features**
+   - In the tuning dropdown, keep the lock icon but add a tooltip on hover/focus: "Pro — unlocks ukulele, mandolin, cavaquinho and custom tunings".
+   - In `ProgressionsPage`, show a "Sync across devices" row that is visible to free users but disabled with a "Pro" badge and tooltip.
+
+4. **Paywall polish**
+   - Update `PaywallModal` copy to list the concrete features being unlocked.
+   - No trial flow (per user request); keep the one-time €4.99 checkout.
+
+### Phase 4 — Verify
+
+1. Run the build and check `/tmp/observability/build-errors.log`.
+2. Test the progression URL share flow in the preview (create progression → copy URL → open in new tab).
+3. Test login sync by signing in and confirming local progressions appear server-side.
+4. Verify chord page meta tags and theory content with a few sample slugs (`/chord/c-major`, `/chord/a-minor-7`).
+
+---
+
+## Out of scope (per user request)
+
+- Stripe 7-day trial implementation.
+- Changes to the chord detection engine.
+- New instruments or tunings.
+- Audio playback.
+- Export-to-image.
