@@ -263,30 +263,31 @@ function ChordPage() {
                 Common progressions using {parsed.displayName}
               </h3>
               <div className="space-y-3">
-                {theory.progressions.map((prog, i) => (
-                  <div key={i} className="p-4 rounded-2xl bg-surface border border-border">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      {prog.chords.map((c, j) => (
-                        <span key={j}>
-                          <Link
-                            to="/chord/$slug"
-                            params={{ slug: chordSlug(noteName(c.rootPc), c.suffix) }}
-                            className="text-sm font-bold text-primary hover:underline"
-                          >
-                            {noteName(c.rootPc)}{c.suffix}
-                          </Link>
-                          {j < prog.chords.length - 1 && (
-                            <span className="text-muted mx-1">→</span>
-                          )}
-                        </span>
-                      ))}
+                {theory.progressions.map((prog, i) => {
+                  const parsedChords = parseProgressionParam(prog.chords.join("-"));
+                  return (
+                    <div key={i} className="p-4 rounded-2xl bg-surface border border-border">
+                      <p className="text-sm font-bold mb-2">{prog.name}</p>
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        {parsedChords.map((c, j) => (
+                          <span key={j}>
+                            <Link
+                              to="/chord/$slug"
+                              params={{ slug: chordSlug(noteName(c.rootPc), c.suffix) }}
+                              className="text-sm font-bold text-primary hover:underline"
+                            >
+                              {noteName(c.rootPc)}{c.suffix}
+                            </Link>
+                            {j < parsedChords.length - 1 && (
+                              <span className="text-muted mx-1">→</span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted">{prog.note}</p>
                     </div>
-                    <p className="text-xs text-muted">{prog.description}</p>
-                    <p className="text-[10px] font-mono text-muted mt-1">
-                      Key: {keyLabel(prog.key)}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
