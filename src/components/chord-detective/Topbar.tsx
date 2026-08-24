@@ -260,6 +260,7 @@ export function Topbar({
             </Link>
             <Link
               to="/progressions"
+              search={{}}
               onClick={() => setMenu(false)}
               className="w-full text-left px-3 py-2 rounded-lg hover:bg-surface-2 text-sm font-mono uppercase tracking-widest text-muted hover:text-foreground block"
             >
