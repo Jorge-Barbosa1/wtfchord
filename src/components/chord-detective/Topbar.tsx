@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { TUNINGS, CUSTOM_TUNING_ID, type Tuning } from "@/lib/music/tunings";
 import { useProStatus } from "@/hooks/useProStatus";
 import { AuthButton } from "./AuthButton";
@@ -182,6 +182,7 @@ export function Topbar({
         </Link>
         <Link
           to="/progressions"
+          search={{}}
           className="text-xs font-mono text-muted hover:text-foreground transition-colors uppercase tracking-widest"
         >
           Progressions
@@ -213,6 +214,14 @@ export function Topbar({
             </div>
           )}
         </div>
+        {!isPro && (
+          <Link
+            to="/pricing"
+            className="text-xs font-mono uppercase tracking-widest px-3 py-1.5 rounded-full bg-primary/15 text-primary border border-primary/30 hover:bg-primary hover:text-primary-foreground transition-colors"
+          >
+            Upgrade
+          </Link>
+        )}
         <AuthButton />
       </div>
 
@@ -251,6 +260,7 @@ export function Topbar({
             </Link>
             <Link
               to="/progressions"
+              search={{}}
               onClick={() => setMenu(false)}
               className="w-full text-left px-3 py-2 rounded-lg hover:bg-surface-2 text-sm font-mono uppercase tracking-widest text-muted hover:text-foreground block"
             >
@@ -272,6 +282,15 @@ export function Topbar({
             <SettingRow label="Left-handed mode" active={leftHanded} onToggle={onToggleLeft} />
             <SettingRow label="Light theme" active={lightMode} onToggle={onToggleLight} />
             <div className="my-2 h-px bg-border" />
+            {!isPro && (
+              <Link
+                to="/pricing"
+                onClick={() => setMenu(false)}
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-surface-2 text-sm font-mono uppercase tracking-widest text-primary block"
+              >
+                Upgrade to Pro
+              </Link>
+            )}
             <AuthButton compact />
           </div>
         )}

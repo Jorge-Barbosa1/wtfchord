@@ -44,9 +44,32 @@ export function PaywallModal({ open, onClose }: PaywallModalProps) {
           WTFChord Pro
         </h2>
         <p className="text-muted text-sm mb-6">
-          Unlock ukulele, cavaquinho, mandolin, and custom tunings with a one-time
-          payment.
+          One-time unlock for every device you own.
         </p>
+
+        <ul className="space-y-2 mb-6">
+          {[
+            "Ukulele (high-G & low-G)",
+            "Mandolin (GDAE)",
+            "Cavaquinho (GGBD)",
+            "Custom 6-string tunings",
+            "Cloud sync across devices",
+            "Priority support",
+          ].map((item) => (
+            <li key={item} className="flex items-center gap-2 text-sm text-muted">
+              <svg
+                className="size-4 text-primary shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+              {item}
+            </li>
+          ))}
+        </ul>
 
         <div className="flex items-baseline gap-2 mb-6">
           <span className="text-4xl font-extrabold tracking-tighter">€4.99</span>

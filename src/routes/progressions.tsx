@@ -71,7 +71,13 @@ function chordDisplayName(rootPc: number, suffix: string): string {
 
 function voicingAlt(tuning: Tuning, chordName: string, strings: StringState[]): string {
   const frets = strings
-    .map((s) => (s === "mute" ? "x" : s === "open" ? "0" : String(s.fret)))
+    .map((s) =>
+      s === null || s === "mute"
+        ? "x"
+        : s === "open"
+          ? "0"
+          : String(s.fret),
+    )
     .join("-");
   return `${chordName} fingering on ${tuning.label}: frets ${frets}`;
 }
