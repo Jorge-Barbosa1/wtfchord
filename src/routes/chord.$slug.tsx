@@ -18,6 +18,7 @@ import {
   commonProgressions,
   keyLabel,
 } from "@/lib/music/theory";
+import { parseProgressionParam } from "@/lib/progressions";
 import { MiniVoicing } from "@/components/chord-detective/MiniVoicing";
 
 const BASE_URL = "https://wtfchord.lovable.app";
