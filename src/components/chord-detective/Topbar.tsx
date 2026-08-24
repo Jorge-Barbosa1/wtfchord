@@ -280,6 +280,15 @@ export function Topbar({
             <SettingRow label="Left-handed mode" active={leftHanded} onToggle={onToggleLeft} />
             <SettingRow label="Light theme" active={lightMode} onToggle={onToggleLight} />
             <div className="my-2 h-px bg-border" />
+            {!isPro && (
+              <Link
+                to="/pricing"
+                onClick={() => setMenu(false)}
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-surface-2 text-sm font-mono uppercase tracking-widest text-primary block"
+              >
+                Upgrade to Pro
+              </Link>
+            )}
             <AuthButton compact />
           </div>
         )}
