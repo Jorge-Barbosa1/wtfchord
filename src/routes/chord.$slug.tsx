@@ -118,7 +118,13 @@ function ChordPage() {
 
   function voicingAlt(index: number, strings: typeof voicings[number]["strings"]): string {
     const frets = strings
-      .map((s) => (s === "mute" ? "x" : s === "open" ? "0" : String(s.fret)))
+      .map((s) =>
+        s === null || s === "mute"
+          ? "x"
+          : s === "open"
+            ? "0"
+            : String(s.fret),
+      )
       .join("-");
     return `${parsed.displayName} guitar voicing ${index + 1}: frets ${frets}`;
   }
