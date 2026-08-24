@@ -213,6 +213,14 @@ export function Topbar({
             </div>
           )}
         </div>
+        {!isPro && (
+          <Link
+            to="/pricing"
+            className="text-xs font-mono uppercase tracking-widest px-3 py-1.5 rounded-full bg-primary/15 text-primary border border-primary/30 hover:bg-primary hover:text-primary-foreground transition-colors"
+          >
+            Upgrade
+          </Link>
+        )}
         <AuthButton />
       </div>
 
