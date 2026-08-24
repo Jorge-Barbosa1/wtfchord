@@ -182,6 +182,7 @@ export function Topbar({
         </Link>
         <Link
           to="/progressions"
+          search={{}}
           className="text-xs font-mono text-muted hover:text-foreground transition-colors uppercase tracking-widest"
         >
           Progressions
