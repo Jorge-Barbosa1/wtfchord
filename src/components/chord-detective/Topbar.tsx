@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { TUNINGS, CUSTOM_TUNING_ID, type Tuning } from "@/lib/music/tunings";
 import { useProStatus } from "@/hooks/useProStatus";
 import { AuthButton } from "./AuthButton";
