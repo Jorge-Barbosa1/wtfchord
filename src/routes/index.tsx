@@ -33,8 +33,10 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-function emptyStringsFor(t: Tuning): StringState[] {
-  return Array.from({ length: t.strings.length }, () => null);
+function defaultStringsFor(t: Tuning): StringState[] {
+  // Default all strings to open (0) instead of muted/null
+  // User can explicitly mute with X above the nut
+  return Array.from({ length: t.strings.length }, () => "open");
 }
 
 function Index() {
@@ -77,7 +79,7 @@ function Index() {
     return found;
   }, [tuningId, customStrings, isPro]);
 
-  const [strings, setStrings] = useState<StringState[]>(() => emptyStringsFor(tuning));
+  const [strings, setStrings] = useState<StringState[]>(() => defaultStringsFor(tuning));
   const [leftHanded, setLeftHanded] = usePersistedState<boolean>("cd.left", false);
   const [lightMode, setLightMode] = usePersistedState<boolean>("cd.light", false);
   const [results, setResults] = useState<DetectionResult[]>([]);
@@ -98,17 +100,40 @@ function Index() {
 
   // Reset strings when tuning changes (length may differ)
   useEffect(() => {
-    setStrings(emptyStringsFor(tuning));
+    setStrings(defaultStringsFor(tuning));
     setResults([]);
     setSelectedName(undefined);
   }, [tuning]);
+
+  // Auto-detect chords whenever strings change
+  useEffect(() => {
+    const r = detectChords({ tuning, strings });
+    setResults(r);
+    setSelectedName(r[0]?.name);
+    // Add to history when we have a result
+    if (r[0]) {
+      const notes = notesFromInput({ tuning, strings });
+      const entry: HistoryEntry = {
+        id: `${Date.now()}`,
+        name: r[0].name,
+        notes,
+        confidence: r[0].confidence,
+        tuningId: tuning.id,
+        tuningLabel: tuning.label,
+        strings: [...strings],
+        timestamp: Date.now(),
+      };
+      setHistory((prev) => [entry, ...prev.filter((p) => p.name !== entry.name)].slice(0, 20));
+    }
+  }, [strings, tuning]);
 
   const onSetFret = (stringIndex: number, fret: number) => {
     setStrings((prev) => {
       const next = [...prev];
       const cur = next[stringIndex];
       if (cur && typeof cur === "object" && cur.fret === fret) {
-        next[stringIndex] = null;
+        // Tapping same fret returns to open (not null)
+        next[stringIndex] = "open";
       } else {
         next[stringIndex] = { fret };
       }
@@ -120,10 +145,10 @@ function Index() {
     setStrings((prev) => {
       const next = [...prev];
       const cur = next[stringIndex];
-      if (cur === null) next[stringIndex] = "open";
-      else if (cur === "open") next[stringIndex] = "mute";
-      else if (cur === "mute") next[stringIndex] = null;
-      else next[stringIndex] = "open";
+      // Cycle: open -> mute -> open (removed null state)
+      if (cur === "open") next[stringIndex] = "mute";
+      else if (cur === "mute") next[stringIndex] = "open";
+      else next[stringIndex] = "open"; // fretted goes to open
       return next;
     });
   };
@@ -149,7 +174,7 @@ function Index() {
   };
 
   const onClear = () => {
-    setStrings(emptyStringsFor(tuning));
+    setStrings(defaultStringsFor(tuning));
     setResults([]);
     setSelectedName(undefined);
   };
@@ -199,17 +224,14 @@ function Index() {
     });
   };
 
-  // Press Enter to identify
+  // Keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Enter" && !historyOpen) onIdentify();
       if (e.key === "Backspace" && (e.metaKey || e.ctrlKey)) onClear();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   });
-
-  const hasInput = strings.some((s) => s !== null);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -277,18 +299,10 @@ function Index() {
 
           <div className="flex gap-3">
             <button
-              onClick={onIdentify}
-              disabled={!hasInput}
-              className="flex-1 bg-foreground text-background h-14 sm:h-16 rounded-2xl font-extrabold text-base sm:text-lg flex items-center justify-center gap-3 hover:bg-primary hover:text-primary-foreground transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              IDENTIFY CHORD
-              <span className="hidden sm:inline text-xs font-mono opacity-50">[ENTER]</span>
-            </button>
-            <button
               onClick={onClear}
-              className="px-5 sm:px-8 border border-border rounded-2xl hover:bg-surface hover:border-primary/50 transition-colors font-mono text-xs uppercase tracking-widest"
+              className="w-full sm:w-auto px-8 border border-border rounded-2xl hover:bg-surface hover:border-primary/50 transition-colors font-mono text-sm uppercase tracking-widest h-12"
             >
-              Clear
+              Clear All
             </button>
           </div>
         </section>

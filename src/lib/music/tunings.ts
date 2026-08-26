@@ -33,7 +33,7 @@ export const TUNINGS: Tuning[] = [
   {
     id: "ukulele-high-g",
     label: "Ukulele High-G (gCEA)",
-    pro: true,
+    // Free tuning - most common ukulele tuning
     strings: [
       { note: "G", octave: 4 },
       { note: "C", octave: 4 },

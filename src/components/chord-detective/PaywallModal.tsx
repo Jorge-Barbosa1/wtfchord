@@ -49,7 +49,7 @@ export function PaywallModal({ open, onClose }: PaywallModalProps) {
 
         <ul className="space-y-2 mb-6">
           {[
-            "Ukulele (high-G & low-G)",
+            "Ukulele Low-G (GCEA)",
             "Mandolin (GDAE)",
             "Cavaquinho (GGBD)",
             "Custom 6-string tunings",

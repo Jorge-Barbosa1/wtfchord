@@ -55,15 +55,15 @@ function scoreCandidate(presentSet: Set<number>, def: ChordDef) {
   for (const p of presentSet) if (!wanted.has(p)) extras.push(p);
   // Coverage: how much of the chord def is present
   const coverage = matches / wanted.size;
-  // Penalty for extra notes the chord doesn't claim
-  const extrasPenalty = extras.length * 0.18;
+  // Penalty for extra notes the chord doesn't claim - heavier penalty
+  const extrasPenalty = extras.length * 0.4;
   // Penalty for missing notes (heavier if root or 3rd-equivalent missing)
   let missingPenalty = 0;
   for (const m of missing) {
     if (m === 0) missingPenalty += 0.6;
     else if (m === 3 || m === 4) missingPenalty += 0.25;
-    else if (m === 7) missingPenalty += 0.15;
-    else missingPenalty += 0.1;
+    else if (m === 7) missingPenalty += 0.1; // 5th missing is common, lighter penalty
+    else missingPenalty += 0.15;
   }
   const raw = coverage - extrasPenalty - missingPenalty;
   return { raw, matches, missing, extras };
