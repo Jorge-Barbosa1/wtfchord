@@ -1,6 +1,8 @@
-# Chord Detective
+# WTFChord — Chord Detective
 
-Chord Detective is a mobile-first chord identification app for guitarists. Tap notes on a virtual fretboard, mark strings as open or muted, and get an instant chord analysis with root, bass, intervals, notes, confidence, and alternative interpretations.
+**▶ Live: [wtfchord.lovable.app](https://wtfchord.lovable.app/)**
+
+WTFChord (a.k.a. Chord Detective) is a mobile-first chord identification app for guitarists. Tap notes on a virtual fretboard, mark strings as open or muted, and get an instant chord analysis with root, bass, intervals, notes, confidence, and alternative interpretations.
 
 The app supports standard tuning, common alternate tunings, and 7-string guitars. Your history and favorites are persisted locally in the browser.
 
@@ -25,6 +27,7 @@ The app supports standard tuning, common alternate tunings, and 7-string guitars
 - Tailwind CSS 4
 - Radix UI primitives
 - Cloudflare Vite plugin / Wrangler-compatible deployment
+- Built and deployed with [Lovable](https://lovable.dev/)
 
 ## How It Works
 
@@ -119,7 +122,3 @@ npm run lint
 - The app stores history, favorites, theme, handedness, and tuning choice locally.
 - Chord detection is optimized for practical guitar voicings, not strict academic harmony alone.
 - The interface is responsive and designed for quick use on desktop and mobile.
-
-## License
-
-Add your preferred license here before publishing the repository.
